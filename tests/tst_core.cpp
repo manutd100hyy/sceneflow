@@ -24,6 +24,7 @@ private slots:
     void catalogCarAndCrossroad();
     void caseStoreSearchRebuildDuplicate();
     void vectorPdfHeader();
+    void filletRightAngle();
 };
 
 void TstCore::offsetHorizontal()
@@ -238,6 +239,37 @@ void TstCore::vectorPdfHeader()
     QVERIFY(form.size() > 1000);
     QVERIFY(exportFormPdf(dir.path() + QStringLiteral("/cert-a3.pdf"), forms, QStringLiteral("certificate"),
                           values, QStringLiteral("A3"), &error));
+}
+
+void TstCore::filletRightAngle()
+{
+    SceneDocument doc;
+    SceneObject west;
+    west.type = QStringLiteral("roadline");
+    west.lineStyle = 1;
+    west.name = QStringLiteral("路边线");
+    west.points << QPointF(-30, -7) << QPointF(-12, -7);
+    SceneObject south;
+    south.type = QStringLiteral("roadline");
+    south.lineStyle = 1;
+    south.name = QStringLiteral("路边线");
+    south.points << QPointF(-7, -30) << QPointF(-7, -12);
+    doc.addObject(west);
+    doc.addObject(south);
+    const QString msg = doc.filletJunctions(6);
+    QVERIFY2(msg.contains(QStringLiteral("圆角")), qPrintable(msg));
+    QCOMPARE(doc.objectCount(), 3);
+    bool nearArc = false;
+    const QVector<SceneObject> &objs = doc.objects();
+    for (int i = 0; i < objs.size(); ++i) {
+        if (objs.at(i).name != QStringLiteral("路口圆角"))
+            continue;
+        for (int k = 0; k < objs.at(i).points.size(); ++k) {
+            if (dist(objs.at(i).points.at(k), QPointF(-8.76, -8.76)) < 0.45)
+                nearArc = true;
+        }
+    }
+    QVERIFY(nearArc);
 }
 
 QTEST_MAIN(TstCore)

@@ -90,6 +90,7 @@ public:
     QPointF snapPoint(const QPointF &world, const Catalog *catalog, const QString &ignoreId = QString()) const;
 
     QString placeTemplate(const TemplateDef &tpl, const QPointF &anchor);
+    QString filletJunctions(double radius);
     QString placeSymbol(const Catalog &catalog, const QString &name, const QPointF &at);
     void addRoad(const QVector<QPointF> &center, int lanes, double laneWidth);
     void addCircleRoad(const QPointF &center, double radius, int lanes, double laneWidth);

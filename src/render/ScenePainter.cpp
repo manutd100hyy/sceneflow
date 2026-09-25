@@ -100,10 +100,94 @@ void strokePath(QPainter &painter, const QVector<QPointF> &pts, const QPen &pen,
     painter.drawPath(path);
 }
 
+QVector<QPointF> ribbonPolygon(const QVector<QPointF> &pts, double half)
+{
+    const QVector<QPointF> left = offsetPolyline(pts, half);
+    const QVector<QPointF> right = offsetPolyline(pts, -half);
+    QVector<QPointF> poly = left;
+    for (int i = right.size() - 1; i >= 0; --i)
+        poly.append(right.at(i));
+    return poly;
+}
+
+void fillRibbon(QPainter &painter, const QVector<QPointF> &poly, const QColor &color)
+{
+    if (poly.size() < 3)
+        return;
+    QPainterPath path;
+    path.moveTo(poly.first());
+    for (int i = 1; i < poly.size(); ++i)
+        path.lineTo(poly.at(i));
+    path.closeSubpath();
+    painter.setPen(QPen(color.darker(130), stroke(painter, 0.04)));
+    painter.setBrush(color);
+    painter.drawPath(path);
+}
+
+void drawTexturedRibbon(QPainter &painter, const SceneObject &obj)
+{
+    const double half = (obj.lineStyle == 5 || obj.lineStyle == 6) ? 0.85 : 0.55;
+    const QVector<QPointF> poly = ribbonPolygon(obj.points, half);
+    QColor fill(78, 148, 86);
+    if (obj.lineStyle == 6)
+        fill = QColor(96, 156, 78);
+    else if (obj.lineStyle == 8)
+        fill = QColor(78, 132, 158);
+    else if (obj.lineStyle == 9)
+        fill = QColor(176, 150, 112);
+    fillRibbon(painter, poly, fill);
+
+    if (obj.lineStyle == 5 || obj.lineStyle == 6) {
+        painter.setPen(QPen(QColor(36, 96, 48), stroke(painter, 0.03)));
+        double walked = 0;
+        const double step = obj.lineStyle == 6 ? 1.15 : 0.7;
+        for (int i = 1; i < obj.points.size(); ++i) {
+            const double len = dist(obj.points.at(i - 1), obj.points.at(i));
+            if (len < 1e-6)
+                continue;
+            const QPointF dir = (obj.points.at(i) - obj.points.at(i - 1)) / len;
+            const QPointF n(-dir.y(), dir.x());
+            double local = 0;
+            while (local < len) {
+                const double wobble = obj.lineStyle == 6 ? (0.35 + 0.4 * qAbs(qSin(walked * 1.7))) : 0.45;
+                const QPointF p = obj.points.at(i - 1) + dir * local;
+                painter.drawLine(p - n * wobble, p + n * wobble * 0.65);
+                local += step;
+                walked += step;
+            }
+        }
+    } else if (obj.lineStyle == 8) {
+        painter.setPen(QPen(QColor(28, 78, 112), stroke(painter, 0.05)));
+        strokePath(painter, obj.points, painter.pen(), false);
+        painter.setPen(QPen(QColor(210, 230, 236), stroke(painter, 0.03), Qt::DashLine));
+        strokePath(painter, offsetPolyline(obj.points, 0.18), painter.pen(), false);
+    } else {
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(120, 96, 64));
+        double walked = 0;
+        for (int i = 1; i < obj.points.size(); ++i) {
+            const double len = dist(obj.points.at(i - 1), obj.points.at(i));
+            if (len < 1e-6)
+                continue;
+            const QPointF dir = (obj.points.at(i) - obj.points.at(i - 1)) / len;
+            double local = 0.2;
+            while (local < len) {
+                painter.drawEllipse(obj.points.at(i - 1) + dir * local, 0.08, 0.08);
+                local += 0.45;
+                walked += 0.45;
+            }
+        }
+    }
+}
+
 void drawRoadLine(QPainter &painter, const SceneObject &obj)
 {
     if (obj.lineStyle == 0 || obj.points.size() < 2)
         return;
+    if (obj.lineStyle == 5 || obj.lineStyle == 6 || obj.lineStyle == 8 || obj.lineStyle == 9) {
+        drawTexturedRibbon(painter, obj);
+        return;
+    }
     const QVector<QPointF> pts = obj.points;
     QColor color(35, 44, 52);
     double width = 0.12;

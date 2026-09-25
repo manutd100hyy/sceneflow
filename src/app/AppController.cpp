@@ -560,6 +560,7 @@ void AppController::openSample()
     addLine(-edge + 0.6, -mouth + 1.2, edge - 0.6, -mouth + 1.2, 1, QStringLiteral("停止线"));
     addLine(-mouth + 1.2, -edge + 0.6, -mouth + 1.2, edge - 0.6, 1, QStringLiteral("停止线"));
     addLine(mouth - 1.2, -edge + 0.6, mouth - 1.2, edge - 0.6, 1, QStringLiteral("停止线"));
+    m_document.filletJunctions(6);
 
     m_document.addCrosswalk(QPointF(-edge, mouth + 1.6), QPointF(edge, mouth + 1.6), 3.2);
     m_document.addCrosswalk(QPointF(-edge, -mouth - 1.6), QPointF(edge, -mouth - 1.6), 3.2);

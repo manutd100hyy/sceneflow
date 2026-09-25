@@ -657,6 +657,8 @@ QString SceneDocument::autoLabel(int numberType) const
     return series.last();
 }
 
+static int filletObjects(QVector<SceneObject> &objects, double radius);
+
 QString SceneDocument::placeTemplate(const TemplateDef &tpl, const QPointF &anchor)
 {
     const QRectF box = tpl.bounds();
@@ -702,8 +704,194 @@ QString SceneDocument::placeTemplate(const TemplateDef &tpl, const QPointF &anch
         }
         created.append(obj);
     }
+    filletObjects(created, 5.0);
     addObjects(created, tpl.name);
     return group;
+}
+
+static bool curbStyle(int style)
+{
+    return style == 1 || style == 5 || style == 6 || style == 8 || style == 9 || style == 10 || style == 11;
+}
+
+static QPointF towardGap(const SceneObject &obj, bool atStart)
+{
+    const QPointF d = atStart ? (obj.points.at(0) - obj.points.at(1))
+                              : (obj.points.last() - obj.points.at(obj.points.size() - 2));
+    const double len = QLineF(QPointF(0, 0), d).length();
+    if (len < 1e-6)
+        return QPointF(1, 0);
+    return d / len;
+}
+
+static bool intersectRays(const QPointF &p1, const QPointF &d1, const QPointF &p2, const QPointF &d2,
+                          QPointF *hit, double *t, double *s)
+{
+    const double cross = d1.x() * d2.y() - d1.y() * d2.x();
+    if (qAbs(cross) < 1e-5)
+        return false;
+    const QPointF w = p2 - p1;
+    *t = (w.x() * d2.y() - w.y() * d2.x()) / cross;
+    *s = (w.x() * d1.y() - w.y() * d1.x()) / cross;
+    *hit = p1 + d1 * (*t);
+    return true;
+}
+
+static void trimEnd(QVector<QPointF> &pts, bool atStart, const QPointF &tangent)
+{
+    if (pts.size() < 2)
+        return;
+    if (atStart) {
+        while (pts.size() >= 3) {
+            const QPointF ab = pts.at(1) - pts.at(0);
+            const double ab2 = QPointF::dotProduct(ab, ab);
+            const double u = ab2 < 1e-8 ? 0 : QPointF::dotProduct(tangent - pts.at(0), ab) / ab2;
+            if (u <= 1.02)
+                break;
+            pts.removeFirst();
+        }
+        pts[0] = tangent;
+    } else {
+        while (pts.size() >= 3) {
+            const QPointF inward = pts.at(pts.size() - 2);
+            const QPointF end = pts.at(pts.size() - 1);
+            const QPointF ab = end - inward;
+            const double ab2 = QPointF::dotProduct(ab, ab);
+            const double u = ab2 < 1e-8 ? 1 : QPointF::dotProduct(tangent - inward, ab) / ab2;
+            if (u >= -0.02)
+                break;
+            pts.removeLast();
+        }
+        pts[pts.size() - 1] = tangent;
+    }
+}
+
+static QVector<QPointF> filletArc(const QPointF &center, const QPointF &t1, const QPointF &t2, double radius)
+{
+    const double a0 = qAtan2(t1.y() - center.y(), t1.x() - center.x());
+    const double a1 = qAtan2(t2.y() - center.y(), t2.x() - center.x());
+    double sweep = a1 - a0;
+    const double pi = 3.141592653589793;
+    while (sweep > pi)
+        sweep -= 2 * pi;
+    while (sweep < -pi)
+        sweep += 2 * pi;
+    const int steps = qBound(6, int(qAbs(sweep) / (pi / 16.0)), 28);
+    QVector<QPointF> pts;
+    for (int i = 0; i <= steps; ++i) {
+        const double a = a0 + sweep * (double(i) / steps);
+        pts.append(center + QPointF(qCos(a), qSin(a)) * radius);
+    }
+    return pts;
+}
+
+static int filletObjects(QVector<SceneObject> &objects, double radius)
+{
+    radius = qBound(1.5, radius, 12.0);
+    const int count = objects.size();
+    QVector<char> usedStart(count, 0);
+    QVector<char> usedEnd(count, 0);
+    QVector<SceneObject> arcs;
+    int joined = 0;
+    for (int i = 0; i < count; ++i) {
+        SceneObject &a = objects[i];
+        if (a.type != QLatin1String("roadline") || a.points.size() < 2 || !curbStyle(a.lineStyle))
+            continue;
+        if (a.name.contains(QStringLiteral("停止")))
+            continue;
+        if (polylineLength(a.points) < 8)
+            continue;
+        for (int j = i + 1; j < count; ++j) {
+            SceneObject &b = objects[j];
+            if (b.type != QLatin1String("roadline") || b.points.size() < 2 || b.lineStyle != a.lineStyle)
+                continue;
+            if (b.name.contains(QStringLiteral("停止")) || polylineLength(b.points) < 8)
+                continue;
+            for (int ea = 0; ea < 2; ++ea) {
+                if ((ea == 0 && usedStart.at(i)) || (ea == 1 && usedEnd.at(i)))
+                    continue;
+                for (int eb = 0; eb < 2; ++eb) {
+                    if ((eb == 0 && usedStart.at(j)) || (eb == 1 && usedEnd.at(j)))
+                        continue;
+                    const bool aStart = ea == 0;
+                    const bool bStart = eb == 0;
+                    const QPointF pa = aStart ? a.points.first() : a.points.last();
+                    const QPointF pb = bStart ? b.points.first() : b.points.last();
+                    const double gap = dist(pa, pb);
+                    if (gap < 0.35 || gap > 16)
+                        continue;
+                    const QPointF d1 = towardGap(a, aStart);
+                    const QPointF d2 = towardGap(b, bStart);
+                    QPointF hit;
+                    double t = 0;
+                    double s = 0;
+                    if (!intersectRays(pa, d1, pb, d2, &hit, &t, &s))
+                        continue;
+                    if (t < 0.2 || s < 0.2 || t > 24 || s > 24)
+                        continue;
+                    const QPointF u1 = -d1;
+                    const QPointF u2 = -d2;
+                    const double dot = qBound(-1.0, QPointF::dotProduct(u1, u2), 1.0);
+                    const double theta = qAcos(dot);
+                    if (theta < 0.45 || theta > 2.6)
+                        continue;
+                    const double halfTan = qTan(theta * 0.5);
+                    if (halfTan < 0.15)
+                        continue;
+                    double useR = radius;
+                    double trim = useR / halfTan;
+                    const double limit = qMin(polylineLength(a.points), polylineLength(b.points)) * 0.55;
+                    if (trim > limit) {
+                        useR = limit * halfTan;
+                        trim = limit;
+                    }
+                    if (useR < 1.2)
+                        continue;
+                    const QPointF t1 = hit + u1 * trim;
+                    const QPointF t2 = hit + u2 * trim;
+                    const QPointF bis = u1 + u2;
+                    const double bisLen = QLineF(QPointF(0, 0), bis).length();
+                    if (bisLen < 1e-4)
+                        continue;
+                    const QPointF center = hit + (bis / bisLen) * (useR / qSin(theta * 0.5));
+                    trimEnd(a.points, aStart, t1);
+                    trimEnd(b.points, bStart, t2);
+                    SceneObject arc;
+                    arc.type = QStringLiteral("roadline");
+                    arc.name = QStringLiteral("路口圆角");
+                    arc.groupId = a.groupId.isEmpty() ? b.groupId : a.groupId;
+                    arc.lineStyle = a.lineStyle;
+                    arc.points = filletArc(center, t1, t2, useR);
+                    arcs.append(arc);
+                    if (aStart)
+                        usedStart[i] = 1;
+                    else
+                        usedEnd[i] = 1;
+                    if (bStart)
+                        usedStart[j] = 1;
+                    else
+                        usedEnd[j] = 1;
+                    ++joined;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < arcs.size(); ++i)
+        objects.append(arcs.at(i));
+    return joined;
+}
+
+QString SceneDocument::filletJunctions(double radius)
+{
+    QVector<SceneObject> next = m_objects;
+    const int joined = filletObjects(next, radius);
+    if (joined <= 0)
+        return QStringLiteral("没有可衔接的路口转角");
+    const QVector<SceneObject> before = m_objects;
+    m_objects = next;
+    rebuildIndex();
+    pushCommand(new SnapshotCommand(before, m_aerial, m_objects, m_aerial), true);
+    return QStringLiteral("已为 %1 个路口转角添加圆角").arg(joined);
 }
 
 QString SceneDocument::placeSymbol(const Catalog &catalog, const QString &name, const QPointF &at)
