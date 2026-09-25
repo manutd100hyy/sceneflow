@@ -36,4 +36,8 @@ RESOURCES += qml/qml.qrc
 android {
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
     DISTFILES += android/AndroidManifest.xml
+    # data/ 进 APK assets，运行时从 assets:/data 读取。
+    assets.files = $$PWD/data
+    assets.path = /assets
+    INSTALLS += assets
 }

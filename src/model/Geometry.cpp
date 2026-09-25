@@ -295,6 +295,9 @@ QString locateDataDir()
     const QByteArray env = qgetenv("SKETCHROAD_DATA");
     if (!env.isEmpty())
         candidates << QString::fromLocal8Bit(env);
+#ifdef Q_OS_ANDROID
+    candidates << QStringLiteral("assets:/data");
+#endif
     if (QCoreApplication::instance()) {
         const QString bin = QCoreApplication::applicationDirPath();
         candidates << QDir(bin).filePath("data");

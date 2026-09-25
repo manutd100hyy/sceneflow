@@ -15,7 +15,7 @@ make -j$(nproc)
 ./SketchRoad
 ```
 
-图符、道路模板和文书版式在 `data/`。程序按下面顺序找数据目录：环境变量 `SKETCHROAD_DATA`、可执行文件旁的 `data/`、上两级目录中的 `data/`，最后是编译时写入的路径。
+图符、道路模板和文书版式在 `data/`。程序按下面顺序找数据目录：环境变量 `SKETCHROAD_DATA`、Android 上的 `assets:/data`、可执行文件旁的 `data/`、上两级目录中的 `data/`，最后是编译时写入的路径。
 
 案例默认写到应用数据目录（`QStandardPaths::AppDataLocation`）。可用 `SKETCHROAD_HOME` 指定根目录。每个案例一个文件夹：
 
@@ -62,24 +62,28 @@ MSVC 把 `-spec` 换成 `win32-msvc`，然后用 `nmake` 或在 Qt Creator 里�
 
 3. 把 `data` 目录放到 `SketchRoad.exe` 旁边，或设置 `SKETCHROAD_DATA`。部署时用该套件的 `windeployqt SketchRoad.exe`。
 
-## Android（Qt 5.14.2，qmake）
+## Android（Qt 5.15.2，qmake，API 仍按 5.14）
 
-本机没有 Android SDK，仓库不附带 APK。清单在 `android/AndroidManifest.xml`，包名 `com.sketchroad.scene`，`minSdkVersion` 21。
+清单在 `android/AndroidManifest.xml`，包名 `com.sketchroad.scene`，`minSdkVersion` 21。`SketchRoad.pro` 已把 `data/` 装进 APK 的 `assets/data`，程序从 `assets:/data` 读取。仓库忽略 `*.apk`，不把安装包提交进 git。
 
-1. 安装 Qt 5.14.2 的 Android 套件（armeabi-v7a 或 arm64-v8a）、Android SDK、NDK（与该 Qt 套件说明一致，5.14 常用 NDK r20/r21）和 JDK 8。
-2. Qt Creator 打开 `SketchRoad.pro`，选择 Android 套件。工程已设置 `ANDROID_PACKAGE_SOURCE_DIR`。
-3. 构建前把 `data/` 打进 APK。可在 `.pro` 里增加：
+已用 Qt 5.15.2 Android 套件、NDK r21e（21.4.7075529）、SDK Platform 28、Build-Tools 28.0.3 和 JDK 11 打出调试包，同时包含 armeabi-v7a 和 arm64-v8a，使用调试证书签名。JDK 21 配这套 Gradle 会失败。
 
-```qmake
-android {
-    data.files = $$PWD/data
-    data.path = /assets/data
-    INSTALLS += data
-}
+构建：
+
+```bash
+export ANDROID_SDK_ROOT=$HOME/android/sdk
+export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/21.4.7075529
+export ANDROID_NDK_HOST=linux-x86_64
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+mkdir build-android && cd build-android
+$HOME/Qt/5.15.2/android/bin/qmake ../SketchRoad.pro -spec android-clang \
+    'ANDROID_ABIS=armeabi-v7a arm64-v8a'
+make -j$(nproc)
+make apk
 ```
 
-应用在 Android 上若找不到数据，设置资源复制逻辑或把 `SKETCHROAD_DATA` 指到解压后的目录。签名与打包用 Qt Creator 的 “Build APK”。
+产物是 `android-build/SketchRoad.apk`。设备上若没有文泉驿微米黑，界面中文会落到系统字体。
 
 ## 范围说明
 
-只包含草图版和航拍版。航拍版在草图能力上增加照片底图、两点标定和叠绘导出。不做镜头畸变校正、AI 识别、注册授权、服务器上传、电子签名板、蓝牙测距，也不迁移旧 plist 案例。直角标注的比例化按两端直线距离移动对象。路口没有自动圆角衔接。详见 `docs/STATUS.md`。
+只包含草图版和航拍版。航拍版在草图能力上增加照片底图、两点标定和叠绘导出。不做镜头畸变校正、AI 识别、注册授权、服务器上传、电子签名板、蓝牙测距，也不迁移旧 plist 案例。直角标注按 L 形路径比例化。路口边线会自动加圆角。文书表格是矢量路径。详见 `docs/STATUS.md`。
