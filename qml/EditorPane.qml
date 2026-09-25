@@ -122,7 +122,10 @@ Item {
                 id: canvas
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Component.onCompleted: app.attachCanvas(canvas)
+                Component.onCompleted: {
+                    app.attachCanvas(canvas)
+                    Qt.callLater(function() { app.fit() })
+                }
             }
 
             Rectangle {

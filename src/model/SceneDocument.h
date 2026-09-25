@@ -101,6 +101,7 @@ public:
     void addGuide(const QPointF &a, const QPointF &b);
     void addParking(const QPointF &at, double length, double width, int stalls, double rotation);
     void ensureCompass();
+    void parkCompass(const Catalog *catalog);
     void clearDrawings();
 
     QString proportionalize();

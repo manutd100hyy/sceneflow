@@ -510,7 +510,7 @@ void AppController::newCase(const QString &name, const QString &templateName)
 void AppController::openSample()
 {
     setEdition(QStringLiteral("sketch"));
-    newCase(QStringLiteral("示例案例 · 城市路口"), QStringLiteral("十字路口"));
+    newCase(QStringLiteral("示例案例 · 城市路口"), QString());
     m_loading = true;
     m_meta.insert(QStringLiteral("location"), QStringLiteral("人民路与中山路交叉口"));
     m_meta.insert(QStringLiteral("accidentTime"), QStringLiteral("2026-09-25 14:30"));
@@ -521,40 +521,79 @@ void AppController::openSample()
     m_parties.clear();
     m_parties << partyMap(QStringLiteral("王强"), QStringLiteral("辽A12345"));
     m_parties << partyMap(QStringLiteral("李娜"), QStringLiteral("辽A67890"));
+
+    const QString group = newUuid();
+    const double arm = 34;
+    const double mouth = 12;
+    const double edge = 7;
+    const double lane = 3.5;
+    const auto addLine = [this, group](double x1, double y1, double x2, double y2, int style, const QString &name) {
+        SceneObject obj;
+        obj.type = QStringLiteral("roadline");
+        obj.name = name;
+        obj.groupId = group;
+        obj.lineStyle = style;
+        obj.points << QPointF(x1, y1) << QPointF(x2, y2);
+        m_document.addObject(obj);
+    };
+    addLine(-arm, edge, -mouth, edge, 1, QStringLiteral("路边线"));
+    addLine(-arm, -edge, -mouth, -edge, 1, QStringLiteral("路边线"));
+    addLine(mouth, edge, arm, edge, 1, QStringLiteral("路边线"));
+    addLine(mouth, -edge, arm, -edge, 1, QStringLiteral("路边线"));
+    addLine(-edge, mouth, -edge, arm, 1, QStringLiteral("路边线"));
+    addLine(edge, mouth, edge, arm, 1, QStringLiteral("路边线"));
+    addLine(-edge, -arm, -edge, -mouth, 1, QStringLiteral("路边线"));
+    addLine(edge, -arm, edge, -mouth, 1, QStringLiteral("路边线"));
+    addLine(-arm, 0, -mouth, 0, 3, QStringLiteral("中心双实线"));
+    addLine(mouth, 0, arm, 0, 3, QStringLiteral("中心双实线"));
+    addLine(0, -arm, 0, -mouth, 3, QStringLiteral("中心双实线"));
+    addLine(0, mouth, 0, arm, 3, QStringLiteral("中心双实线"));
+    addLine(-arm, lane, -mouth, lane, 2, QStringLiteral("车道虚线"));
+    addLine(-arm, -lane, -mouth, -lane, 2, QStringLiteral("车道虚线"));
+    addLine(mouth, lane, arm, lane, 2, QStringLiteral("车道虚线"));
+    addLine(mouth, -lane, arm, -lane, 2, QStringLiteral("车道虚线"));
+    addLine(-lane, -arm, -lane, -mouth, 2, QStringLiteral("车道虚线"));
+    addLine(lane, -arm, lane, -mouth, 2, QStringLiteral("车道虚线"));
+    addLine(-lane, mouth, -lane, arm, 2, QStringLiteral("车道虚线"));
+    addLine(lane, mouth, lane, arm, 2, QStringLiteral("车道虚线"));
+    addLine(-edge + 0.6, mouth - 1.2, edge - 0.6, mouth - 1.2, 1, QStringLiteral("停止线"));
+    addLine(-edge + 0.6, -mouth + 1.2, edge - 0.6, -mouth + 1.2, 1, QStringLiteral("停止线"));
+    addLine(-mouth + 1.2, -edge + 0.6, -mouth + 1.2, edge - 0.6, 1, QStringLiteral("停止线"));
+    addLine(mouth - 1.2, -edge + 0.6, mouth - 1.2, edge - 0.6, 1, QStringLiteral("停止线"));
+
+    m_document.addCrosswalk(QPointF(-edge, mouth + 1.6), QPointF(edge, mouth + 1.6), 3.2);
+    m_document.addCrosswalk(QPointF(-edge, -mouth - 1.6), QPointF(edge, -mouth - 1.6), 3.2);
+    m_document.addCrosswalk(QPointF(-mouth - 1.6, -edge), QPointF(-mouth - 1.6, edge), 3.2);
+    m_document.addCrosswalk(QPointF(mouth + 1.6, -edge), QPointF(mouth + 1.6, edge), 3.2);
+    m_document.addGuide(QPointF(-24, -lane * 0.5), QPointF(-16, -lane * 0.5));
+    m_document.addGuide(QPointF(lane * 0.5, -24), QPointF(lane * 0.5, -16));
+
+    QString carA;
     if (m_catalog.symbol(QStringLiteral("小轿车"))) {
-        const QString a = m_document.placeSymbol(m_catalog, QStringLiteral("小轿车"), QPointF(-2.2, 1.4));
-        m_document.setSelection(a);
-        m_document.setProperty(QStringLiteral("rotation"), -18, &m_catalog);
-        const QString b = m_document.placeSymbol(m_catalog, QStringLiteral("小轿车"), QPointF(3.4, -1.2));
-        m_document.setSelection(b);
-        m_document.setProperty(QStringLiteral("rotation"), 24, &m_catalog);
+        carA = m_document.placeSymbol(m_catalog, QStringLiteral("小轿车"), QPointF(-20, -lane * 0.5));
+        m_document.setSelection(carA);
+        m_document.setProperty(QStringLiteral("rotation"), 0, &m_catalog);
+        const QString carB = m_document.placeSymbol(m_catalog, QStringLiteral("小轿车"), QPointF(lane * 0.5, -20));
+        m_document.setSelection(carB);
+        m_document.setProperty(QStringLiteral("rotation"), 90, &m_catalog);
     }
-    QVector<QPointF> trace;
-    trace << QPointF(0.2, 0.4) << QPointF(1.4, 0.1) << QPointF(2.8, -0.5) << QPointF(4.2, -0.7);
-    m_document.addTrace(trace, 4);
-    m_document.addDimension(QPointF(-2.2, 1.4), QPointF(3.4, -1.2), 0, QString(), QString());
-    SceneObject *dim = 0;
-    const QVector<SceneObject> &objs = m_document.objects();
-    for (int i = objs.size() - 1; i >= 0; --i) {
-        if (objs.at(i).type == QLatin1String("dimension")) {
-            dim = m_document.object(objs.at(i).id);
-            break;
-        }
-    }
-    if (dim) {
-        m_document.setSelection(dim->id);
-        m_document.setProperty(QStringLiteral("measured"), QStringLiteral("8.20"), &m_catalog);
-    }
-    m_document.addText(QPointF(-6, 6), QStringLiteral("人民路"));
-    m_document.ensureCompass();
+    QVector<QPointF> skid;
+    skid << QPointF(-15.5, -2.4) << QPointF(-10.5, -1.7) << QPointF(-6.2, -0.6) << QPointF(-2.4, 0.8);
+    m_document.addTrace(skid, 4);
+    m_document.addDimension(QPointF(-30, -edge), QPointF(-30, edge), 0, QString(), QString());
+    m_document.addDimension(QPointF(-24, -edge - 3.2), QPointF(-14, -edge - 3.2), 0, QString(), QString());
+    m_document.addText(QPointF(-3, arm + 3.5), QStringLiteral("人民路"));
+    m_document.addText(QPointF(arm - 2, 4.2), QStringLiteral("中山路"));
+    m_document.parkCompass(&m_catalog);
+    if (!carA.isEmpty())
+        m_document.setSelection(carA);
     m_loading = false;
     syncFormsFromMeta();
-    m_records << QVariantMap();
+    m_records.clear();
     QVariantMap rec;
     rec.insert(QStringLiteral("id"), newUuid());
     rec.insert(QStringLiteral("time"), m_meta.value(QStringLiteral("accidentTime")).toString());
-    rec.insert(QStringLiteral("text"), QStringLiteral("两车在路口发生侧面碰撞，路面可见侧滑痕迹。"));
-    m_records.clear();
+    rec.insert(QStringLiteral("text"), QStringLiteral("两车在路口发生侧面碰撞，西进口道可见侧滑痕迹。"));
     m_records.append(rec);
     save();
     fit();
@@ -595,9 +634,9 @@ void AppController::openAerialSample()
     m_document.setAerial(aerial);
     m_aerialImage = image;
     if (m_catalog.symbol(QStringLiteral("小轿车")))
-        m_document.placeSymbol(m_catalog, QStringLiteral("小轿车"), QPointF(-4, 0.6));
-    m_document.addDimension(QPointF(-8, 2), QPointF(8, 2), 0, QString(), QString());
-    m_document.ensureCompass();
+        m_document.placeSymbol(m_catalog, QStringLiteral("小轿车"), QPointF(-6, 1.2));
+    m_document.addDimension(QPointF(-10, -6), QPointF(10, -6), 0, QString(), QString());
+    m_document.parkCompass(&m_catalog);
     m_meta.insert(QStringLiteral("location"), QStringLiteral("航拍：建设大街与文化路"));
     m_meta.insert(QStringLiteral("accidentTime"), QStringLiteral("2026-09-25 10:00"));
     syncFormsFromMeta();

@@ -39,23 +39,49 @@ double stroke(const QPainter &painter, double worldWidth)
     return qMax(worldWidth, 1.15 / devicePerMetre(painter));
 }
 
-void drawLabel(QPainter &painter, const QPointF &world, const QString &text, const QColor &color)
+void drawLabel(QPainter &painter, const QPointF &world, const QString &text, const QColor &color, bool halo)
 {
     if (text.isEmpty())
         return;
     const QTransform worldToDevice = painter.transform();
     const QPointF device = worldToDevice.map(world);
-    const int px = qBound(10, int(devicePerMetre(painter) * 0.55), 40);
+    const int px = qBound(11, int(devicePerMetre(painter) * 0.42), 22);
     painter.save();
     painter.resetTransform();
     QFont font(QStringLiteral("WenQuanYi Micro Hei"));
     font.setPixelSize(px);
     painter.setFont(font);
-    painter.setPen(color);
     const QFontMetrics metrics(font);
-    const int w = metrics.horizontalAdvance(text) + 8;
-    const int h = metrics.height() + 2;
-    painter.drawText(QRectF(device.x() - w / 2.0, device.y() - h / 2.0, w, h), Qt::AlignCenter, text);
+    const int w = metrics.horizontalAdvance(text) + 12;
+    const int h = metrics.height() + 6;
+    const QRectF box(device.x() - w / 2.0, device.y() - h / 2.0, w, h);
+    if (halo) {
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(255, 255, 255, 235));
+        painter.drawRoundedRect(box.adjusted(-1, -1, 1, 1), 5, 5);
+    }
+    painter.setPen(color);
+    painter.drawText(box, Qt::AlignCenter, text);
+    painter.restore();
+}
+
+void drawDeviceLabel(QPainter &painter, const QPointF &device, const QString &text, const QColor &color)
+{
+    painter.save();
+    painter.resetTransform();
+    QFont font(QStringLiteral("WenQuanYi Micro Hei"));
+    font.setPixelSize(15);
+    font.setBold(true);
+    painter.setFont(font);
+    const QFontMetrics metrics(font);
+    const int w = metrics.horizontalAdvance(text) + 10;
+    const int h = metrics.height() + 4;
+    const QRectF box(device.x() - w / 2.0, device.y() - h / 2.0, w, h);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(255, 255, 255, 235));
+    painter.drawRoundedRect(box, 4, 4);
+    painter.setPen(color);
+    painter.drawText(box, Qt::AlignCenter, text);
     painter.restore();
 }
 
@@ -191,7 +217,7 @@ void drawSymbol(QPainter &painter, const SceneObject &obj, const Catalog &catalo
     }
     painter.restore();
     if (!obj.label.isEmpty())
-        drawLabel(painter, QPointF(obj.x, obj.y + natural.height() * sy * 0.5 + 0.6), obj.label, QColor(20, 90, 84));
+        drawLabel(painter, QPointF(obj.x, obj.y + natural.height() * sy * 0.5 + 0.85), obj.label, QColor(20, 90, 84), true);
 }
 
 void drawTrace(QPainter &painter, const SceneObject &obj)
@@ -217,7 +243,11 @@ void drawTrace(QPainter &painter, const SceneObject &obj)
     if (obj.showMeasure && obj.points.size() >= 2) {
         const double length = polylineLength(obj.points);
         const QPointF mid = obj.points.at(obj.points.size() / 2);
-        drawLabel(painter, mid, QString::number(length, 'f', 2) + QStringLiteral(" m"), QColor(90, 30, 30));
+        const QPointF dir = obj.points.size() >= 2 ? (obj.points.last() - obj.points.first()) : QPointF(1, 0);
+        const double dlen = qMax(0.001, QLineF(QPointF(0, 0), dir).length());
+        const QPointF side(-dir.y() / dlen, dir.x() / dlen);
+        drawLabel(painter, mid + side * qMax(0.7, 16.0 / devicePerMetre(painter)),
+                  QString::number(length, 'f', 2) + QStringLiteral(" m"), QColor(90, 30, 30), true);
     }
 }
 
@@ -254,7 +284,7 @@ void drawDebris(QPainter &painter, const SceneObject &obj)
     painter.drawPath(path);
     if (obj.showMeasure) {
         const double area = polygonArea(obj.points);
-        drawLabel(painter, boundsOf(obj.points).center(), QString::number(area, 'f', 2) + QStringLiteral(" m²"), QColor(80, 40, 40));
+        drawLabel(painter, boundsOf(obj.points).center(), QString::number(area, 'f', 2) + QStringLiteral(" m²"), QColor(80, 40, 40), true);
     }
 }
 
@@ -301,7 +331,21 @@ void drawDimension(QPainter &painter, const SceneObject &obj)
         text = QStringLiteral("皮尺 ") + text;
     if (obj.determined)
         text = text + QStringLiteral(" ●");
-    drawLabel(painter, (a + b) * 0.5 + n * 0.45, text, color);
+    const double ppm = devicePerMetre(painter);
+    const double off = qMax(1.15, 20.0 / ppm);
+    QPointF labelAt = (a + b) * 0.5 + n * off;
+    if (obj.subType == 1 || obj.subType == 2) {
+        const QPointF corner(b.x(), a.y());
+        const QPointF mid((a.x() + b.x()) * 0.5, (a.y() + b.y()) * 0.5);
+        QPointF out = corner - mid;
+        const double olen = QLineF(QPointF(0, 0), out).length();
+        if (olen > 1e-4)
+            out /= olen;
+        else
+            out = n;
+        labelAt = corner + out * off;
+    }
+    drawLabel(painter, labelAt, text, color, true);
 }
 
 void drawCrosswalk(QPainter &painter, const SceneObject &obj)
@@ -385,12 +429,14 @@ void drawCompass(QPainter &painter, const SceneObject &obj)
     painter.setBrush(QColor(176, 42, 42));
     painter.drawPath(arrow);
     painter.restore();
-    drawLabel(painter, QPointF(obj.x, obj.y + 1.7), QStringLiteral("北"), QColor(140, 30, 30));
+    const double ppm = devicePerMetre(painter);
+    const QPointF device = painter.transform().map(QPointF(obj.x, obj.y));
+    drawDeviceLabel(painter, device + QPointF(0, -(1.45 * ppm + 14)), QStringLiteral("北"), QColor(140, 30, 30));
 }
 
 void drawText(QPainter &painter, const SceneObject &obj)
 {
-    drawLabel(painter, QPointF(obj.x, obj.y), obj.label, QColor(20, 30, 40));
+    drawLabel(painter, QPointF(obj.x, obj.y), obj.label, QColor(20, 30, 40), true);
 }
 
 void drawGrid(QPainter &painter, const SceneDocument &document)

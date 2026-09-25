@@ -40,10 +40,26 @@ QRectF boundsOf(const QVector<QPointF> &pts)
 {
     if (pts.isEmpty())
         return QRectF();
-    QRectF r(pts.first(), QSizeF(0, 0));
-    for (int i = 1; i < pts.size(); ++i)
-        r |= QRectF(pts.at(i), QSizeF(0, 0));
-    return r;
+    double minX = pts.at(0).x();
+    double maxX = minX;
+    double minY = pts.at(0).y();
+    double maxY = minY;
+    for (int i = 1; i < pts.size(); ++i) {
+        minX = qMin(minX, pts.at(i).x());
+        maxX = qMax(maxX, pts.at(i).x());
+        minY = qMin(minY, pts.at(i).y());
+        maxY = qMax(maxY, pts.at(i).y());
+    }
+    // 水平或垂直线段高度/宽度为 0 时 QRectF::isValid() 为假，合并范围会把整条路丢掉。
+    if (maxX - minX < 1e-4) {
+        minX -= 0.05;
+        maxX += 0.05;
+    }
+    if (maxY - minY < 1e-4) {
+        minY -= 0.05;
+        maxY += 0.05;
+    }
+    return QRectF(QPointF(minX, minY), QPointF(maxX, maxY)).normalized();
 }
 
 QRectF united(const QRectF &a, const QRectF &b)

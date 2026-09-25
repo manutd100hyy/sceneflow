@@ -883,6 +883,42 @@ void SceneDocument::ensureCompass()
     addObject(obj);
 }
 
+void SceneDocument::parkCompass(const Catalog *catalog)
+{
+    int found = -1;
+    for (int i = 0; i < m_objects.size(); ++i) {
+        if (m_objects.at(i).type == QLatin1String("compass")) {
+            found = i;
+            break;
+        }
+    }
+    if (found < 0) {
+        ensureCompass();
+        for (int i = 0; i < m_objects.size(); ++i) {
+            if (m_objects.at(i).type == QLatin1String("compass")) {
+                found = i;
+                break;
+            }
+        }
+    }
+    if (found < 0)
+        return;
+    QRectF box;
+    for (int i = 0; i < m_objects.size(); ++i) {
+        if (i == found)
+            continue;
+        box = united(box, m_objects.at(i).worldBounds(catalog));
+    }
+    if (!box.isValid()) {
+        m_objects[found].x = 6;
+        m_objects[found].y = 6;
+    } else {
+        m_objects[found].x = box.right() + 4.0;
+        m_objects[found].y = box.bottom() + 4.0;
+    }
+    emit changed();
+}
+
 void SceneDocument::clearDrawings()
 {
     const QVector<SceneObject> before = m_objects;
@@ -1161,10 +1197,12 @@ void SceneDocument::fitView(double viewWidth, double viewHeight, const Catalog *
         emit viewChanged();
         return;
     }
-    const double margin = 48;
-    const double zx = (viewWidth - margin * 2) / box.width();
-    const double zy = (viewHeight - margin * 2) / box.height();
-    m_zoom = qBound(0.4, qMin(zx, zy), 80.0);
+    const double margin = 72;
+    const double availW = qMax(120.0, viewWidth - margin * 2);
+    const double availH = qMax(120.0, viewHeight - margin * 2);
+    const double zx = availW / qMax(0.5, box.width());
+    const double zy = availH / qMax(0.5, box.height());
+    m_zoom = qBound(1.5, qMin(zx, zy), 24.0);
     const QPointF c = box.center();
     m_panX = viewWidth * 0.5 - c.x() * m_zoom;
     m_panY = viewHeight * 0.5 + c.y() * m_zoom;
