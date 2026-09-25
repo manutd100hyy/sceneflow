@@ -40,27 +40,47 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: phone ? 52 : 60
+            Layout.preferredHeight: phone ? 92 : 60
             color: "white"
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 8
                 anchors.rightMargin: 8
-                spacing: 6
-                Button { text: phone ? "首页" : "‹ 案例首页"; flat: true; onClicked: app.goHome() }
+                anchors.topMargin: phone ? 4 : 0
+                anchors.bottomMargin: phone ? 4 : 0
+                spacing: 0
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 6
+                    Button { text: phone ? "首页" : "‹ 案例首页"; flat: true; onClicked: app.goHome() }
+                    Label {
+                        visible: !phone
+                        text: app.caseName
+                        font.bold: true
+                        font.pixelSize: 18
+                        color: "#203542"
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+                    Item { visible: phone; Layout.fillWidth: true }
+                    Button { text: "撤销"; visible: !phone; enabled: app.canUndo; onClicked: app.undo() }
+                    Button { text: "重做"; visible: !phone; enabled: app.canRedo; onClicked: app.redo() }
+                    Button { text: "保存"; highlighted: app.dirty; onClicked: app.save() }
+                    Button { text: "导出"; visible: !phone; onClicked: exportMenu.open() }
+                    Button { text: "···"; visible: phone; onClicked: exportMenu.open() }
+                }
                 Label {
+                    visible: phone
                     text: app.caseName
                     font.bold: true
-                    font.pixelSize: phone ? 15 : 18
+                    font.pixelSize: 16
                     color: "#203542"
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 28
+                    Layout.leftMargin: 4
                 }
-                Button { text: "撤销"; visible: !phone; enabled: app.canUndo; onClicked: app.undo() }
-                Button { text: "重做"; visible: !phone; enabled: app.canRedo; onClicked: app.redo() }
-                Button { text: "保存"; highlighted: app.dirty; onClicked: app.save() }
-                Button { text: "导出"; visible: !phone; onClicked: exportMenu.open() }
-                Button { text: "···"; visible: phone; onClicked: exportMenu.open() }
             }
         }
         Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#d5e0df" }
@@ -165,11 +185,18 @@ Item {
     Label {
         visible: app.message.length > 0
         text: app.message
+        z: 8
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 36
+        // 手机绘图页底栏 58 + 状态栏 28，提示要落在底栏上方。
+        anchors.bottomMargin: (phone && app.activeTab === 1) ? 100 : 40
         color: "white"
-        padding: 8
-        background: Rectangle { color: "#203542"; radius: 6 }
+        padding: 10
+        leftPadding: 14
+        rightPadding: 14
+        wrapMode: Text.WordWrap
+        width: Math.min(implicitWidth, parent.width - 24)
+        horizontalAlignment: Text.AlignHCenter
+        background: Rectangle { color: "#203542"; radius: 8 }
     }
 }

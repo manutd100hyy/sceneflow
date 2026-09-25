@@ -133,13 +133,14 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 58
                 color: "white"
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 8
-                    Button { text: "图符"; height: 44; onClicked: libDrawer.open() }
-                    Button { text: "标注"; height: 44; highlighted: app.tool === 6; onClicked: app.tool = 6 }
-                    Button { text: "属性"; height: 44; onClicked: propDrawer.open() }
-                    Button { text: "更多"; height: 44; onClicked: moreDrawer.open() }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 6
+                    spacing: 6
+                    Button { text: "图符"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: libDrawer.open() }
+                    Button { text: "标注"; Layout.fillWidth: true; Layout.fillHeight: true; highlighted: app.tool === 6; onClicked: app.tool = 6 }
+                    Button { text: "属性"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: propDrawer.open() }
+                    Button { text: "更多"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: moreDrawer.open() }
                 }
             }
         }
