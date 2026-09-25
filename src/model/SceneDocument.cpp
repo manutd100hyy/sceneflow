@@ -1142,6 +1142,7 @@ QString SceneDocument::proportionalize()
         const QVector<SceneObject> before = m_objects;
         QHash<QString, QPointF> deltaSum;
         QHash<QString, int> deltaCount;
+        QHash<QString, QPointF> newStart;
         QStringList dimIds;
         for (int i = 0; i < m_objects.size(); ++i) {
             const SceneObject &dim = m_objects.at(i);
@@ -1149,13 +1150,23 @@ QString SceneDocument::proportionalize()
                 continue;
             const QPointF a = dim.points.at(0);
             const QPointF b = dim.points.at(1);
-            const double len = dist(a, b);
-            if (len < 0.05)
-                continue;
-            const QPointF dir = (a - b) / len;
-            const QPointF newA = b + dir * dim.measured;
+            QPointF newA;
+            if (dim.subType == 1) {
+                const double leg = qAbs(b.x() - a.x()) + qAbs(b.y() - a.y());
+                if (leg < 0.05)
+                    continue;
+                const double factor = dim.measured / leg;
+                newA = QPointF(b.x() - (b.x() - a.x()) * factor, b.y() - (b.y() - a.y()) * factor);
+            } else {
+                const double len = dist(a, b);
+                if (len < 0.05)
+                    continue;
+                const QPointF dir = (a - b) / len;
+                newA = b + dir * dim.measured;
+            }
             deltaSum[dim.fromId] += newA - a;
             deltaCount[dim.fromId] += 1;
+            newStart.insert(dim.id, newA);
             dimIds << dim.id;
         }
         if (deltaSum.isEmpty())
@@ -1171,14 +1182,9 @@ QString SceneDocument::proportionalize()
         }
         for (int i = 0; i < dimIds.size(); ++i) {
             SceneObject *dim = object(dimIds.at(i));
-            if (!dim || dim->points.size() < 2)
+            if (!dim || dim->points.size() < 2 || !newStart.contains(dim->id))
                 continue;
-            const QPointF b = dim->points.at(1);
-            const QPointF a = dim->points.at(0);
-            const double len = dist(a, b);
-            if (len < 1e-6)
-                continue;
-            dim->points[0] = b + (a - b) / len * dim->measured;
+            dim->points[0] = newStart.value(dim->id);
             dim->determined = true;
         }
         pushCommand(new SnapshotCommand(before, m_aerial, m_objects, m_aerial), true);

@@ -25,6 +25,7 @@ private slots:
     void caseStoreSearchRebuildDuplicate();
     void vectorPdfHeader();
     void filletRightAngle();
+    void proportionalizeRightAngle();
 };
 
 void TstCore::offsetHorizontal()
@@ -239,6 +240,32 @@ void TstCore::vectorPdfHeader()
     QVERIFY(form.size() > 1000);
     QVERIFY(exportFormPdf(dir.path() + QStringLiteral("/cert-a3.pdf"), forms, QStringLiteral("certificate"),
                           values, QStringLiteral("A3"), &error));
+}
+
+void TstCore::proportionalizeRightAngle()
+{
+    SceneDocument doc;
+    SceneObject mark;
+    mark.type = QStringLiteral("text");
+    mark.x = 0;
+    mark.y = 0;
+    const QString id = doc.addObject(mark);
+    SceneObject dim;
+    dim.type = QStringLiteral("dimension");
+    dim.subType = 1;
+    dim.points << QPointF(0, 0) << QPointF(3, 4);
+    dim.measured = 14;
+    dim.fromId = id;
+    doc.addObject(dim);
+    const QString msg = doc.proportionalize();
+    QVERIFY2(msg.contains(QStringLiteral("已按实测")), qPrintable(msg));
+    const SceneObject *moved = doc.object(id);
+    QVERIFY(qAbs(moved->x + 3.0) < 1e-4);
+    QVERIFY(qAbs(moved->y + 4.0) < 1e-4);
+    const SceneObject *scaled = doc.object(doc.selectionId());
+    const double leg = qAbs(scaled->points.at(1).x() - scaled->points.at(0).x())
+            + qAbs(scaled->points.at(1).y() - scaled->points.at(0).y());
+    QVERIFY(qAbs(leg - 14.0) < 1e-3);
 }
 
 void TstCore::filletRightAngle()
