@@ -164,15 +164,31 @@ Item {
         id: helpDialog
         modal: true
         title: "使用说明"
-        x: Math.max(12, (home.width - width) / 2)
-        y: Math.max(12, (home.height - height) / 2)
+        // 宽高写死，避免换行文字的 implicitHeight 和对话框互相绑定。
+        implicitWidth: 520
+        implicitHeight: 420
         width: Math.min(home.width - 24, 560)
+        height: Math.min(home.height - 48, 440)
+        x: Math.round((home.width - width) / 2)
+        y: Math.round((home.height - height) / 2)
         standardButtons: Dialog.Ok
-        contentItem: Label {
-            width: Math.min(home.width - 72, 512)
-            wrapMode: Text.WordWrap
-            text: "草图版用来画道路交通事故现场图。先放道路模板或手绘车道，再放置车辆、行人和设施，接着画痕迹、散落物，并用标注记下实测距离。填写实测米数后点「比例化」，草图会按实测调整。\n\n航拍版在此基础上导入无人机照片。在照片上点两个已知距离的位置，输入米数完成标定，之后的绘图与导出都使用米。\n\n文书按现行勘察笔录、询问笔录、讯问笔录和简易程序认定书版式导出矢量 PDF，可选 A4 或 A3。现场图同样导出矢量 PDF。"
-            color: "#203542"
+        padding: 16
+        contentItem: Item {
+            implicitWidth: 480
+            implicitHeight: 280
+            Flickable {
+                anchors.fill: parent
+                contentWidth: width
+                contentHeight: helpText.implicitHeight
+                clip: true
+                Label {
+                    id: helpText
+                    width: Math.max(160, Math.min(480, home.width - 80))
+                    wrapMode: Text.WordWrap
+                    text: "草图版用来画道路交通事故现场图。先放道路模板或手绘车道，再放置车辆、行人和设施，接着画痕迹、散落物，并用标注记下实测距离。填写实测米数后点「比例化」，草图会按实测调整。\n\n航拍版在此基础上导入无人机照片。在照片上点两个已知距离的位置，输入米数完成标定，之后的绘图与导出都使用米。\n\n文书按现行勘察笔录、询问笔录、讯问笔录和简易程序认定书版式导出矢量 PDF，可选 A4 或 A3。现场图同样导出矢量 PDF。"
+                    color: "#203542"
+                }
+            }
         }
     }
 
