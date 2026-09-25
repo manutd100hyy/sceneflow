@@ -23,39 +23,98 @@ Item {
 
         Rectangle {
             visible: desktop
-            Layout.preferredWidth: 250
+            Layout.preferredWidth: 258
             Layout.fillHeight: true
+            Layout.margins: 8
+            radius: 12
             color: "white"
+            border.color: "#d5e4e0"
+            clip: true
             LibraryColumn { anchors.fill: parent }
         }
-        Rectangle { visible: desktop; Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#d5e0df" }
 
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 0
+            spacing: 8
 
             ScrollView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: phone ? 46 : 50
+                Layout.preferredHeight: phone ? 64 : 72
+                Layout.leftMargin: 8
+                Layout.rightMargin: 8
+                Layout.topMargin: 8
                 clip: true
                 Row {
-                    spacing: 4
-                    leftPadding: 6
-                    topPadding: 6
-                    Button { text: "选择"; highlighted: app.tool === 0; onClicked: app.tool = 0; height: 36 }
-                    Button { text: "平移"; highlighted: app.tool === 1; onClicked: app.tool = 1; height: 36 }
-                    Button { text: "道路"; highlighted: app.tool === 2; onClicked: app.tool = 2; height: 36 }
-                    Button { text: "图符"; highlighted: app.tool === 3; onClicked: app.tool = 3; height: 36 }
-                    Button { text: "痕迹"; highlighted: app.tool === 4; onClicked: app.tool = 4; height: 36 }
-                    Button { text: "散落物"; highlighted: app.tool === 5; onClicked: app.tool = 5; height: 36 }
-                    Button { text: "标注"; highlighted: app.tool === 6; onClicked: app.tool = 6; height: 36 }
-                    Button { text: "文字"; highlighted: app.tool === 7; onClicked: app.tool = 7; height: 36 }
-                    Button { text: "横道"; highlighted: app.tool === 8; onClicked: app.tool = 8; height: 36 }
-                    Button { text: "箭头"; highlighted: app.tool === 9; onClicked: app.tool = 9; height: 36 }
-                    Button { text: "环岛"; highlighted: app.tool === 10; onClicked: app.tool = 10; height: 36 }
-                    Button { text: "橡皮"; highlighted: app.tool === 11; onClicked: app.tool = 11; height: 36 }
-                    Button { text: "标定"; visible: app.edition === "aerial" || app.hasAerial; highlighted: app.tool === 12; onClicked: app.tool = 12; height: 36 }
+                    spacing: 6
+                    leftPadding: 2
+                    topPadding: 2
+                    Repeater {
+                        model: [
+                            { tool: 0, text: "选择", glyph: "select" },
+                            { tool: 1, text: "平移", glyph: "pan" },
+                            { tool: 2, text: "道路", glyph: "road" },
+                            { tool: 3, text: "图符", glyph: "symbol" },
+                            { tool: 4, text: "痕迹", glyph: "trace" },
+                            { tool: 5, text: "散落", glyph: "debris" },
+                            { tool: 6, text: "标注", glyph: "dimension" },
+                            { tool: 7, text: "文字", glyph: "text" },
+                            { tool: 8, text: "横道", glyph: "crosswalk" },
+                            { tool: 9, text: "箭头", glyph: "guide" },
+                            { tool: 10, text: "环岛", glyph: "circle" },
+                            { tool: 11, text: "橡皮", glyph: "eraser" }
+                        ]
+                        delegate: Button {
+                            id: toolBtn
+                            highlighted: app.tool === modelData.tool
+                            onClicked: app.tool = modelData.tool
+                            width: 58
+                            height: phone ? 56 : 62
+                            leftPadding: 2
+                            rightPadding: 2
+                            contentItem: Column {
+                                spacing: 2
+                                ToolGlyph {
+                                    name: modelData.glyph
+                                    ink: toolBtn.highlighted ? "#ffffff" : "#117b70"
+                                    width: 18
+                                    height: 18
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                Text {
+                                    text: modelData.text
+                                    color: toolBtn.highlighted ? "#ffffff" : "#203542"
+                                    font.pixelSize: 11
+                                    font.family: "WenQuanYi Micro Hei"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+                        }
+                    }
+                    Button {
+                        id: calibBtn
+                        visible: app.edition === "aerial" || app.hasAerial
+                        highlighted: app.tool === 12
+                        onClicked: app.tool = 12
+                        width: 58
+                        height: phone ? 56 : 62
+                        contentItem: Column {
+                            spacing: 2
+                            ToolGlyph {
+                                name: "calibrate"
+                                ink: calibBtn.highlighted ? "#ffffff" : "#117b70"
+                                width: 18
+                                height: 18
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            Text {
+                                text: "标定"
+                                color: calibBtn.highlighted ? "#ffffff" : "#203542"
+                                font.pixelSize: 11
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                        }
+                    }
                 }
             }
 
@@ -82,13 +141,16 @@ Item {
             }
         }
 
-        Rectangle { visible: desktop; Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#d5e0df" }
         Rectangle {
             visible: desktop
-            Layout.preferredWidth: 280
+            Layout.preferredWidth: 292
             Layout.fillHeight: true
+            Layout.margins: 8
+            radius: 12
             color: "white"
-            PropertyColumn { anchors.fill: parent }
+            border.color: "#d5e4e0"
+            clip: true
+            PropertyColumn { anchors.fill: parent; anchors.margins: 4 }
         }
     }
 

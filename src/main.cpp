@@ -4,6 +4,7 @@
 
 #include <QApplication>
 #include <QFont>
+#include <QPalette>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickImageProvider>
@@ -42,6 +43,7 @@ int main(int argc, char *argv[])
     }
     if (!captureDir.isEmpty())
         qputenv("QT_QUICK_BACKEND", "software");
+    qputenv("QT_QUICK_CONTROLS_CONF", ":/qtquickcontrols2.conf");
 
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
@@ -50,6 +52,30 @@ int main(int argc, char *argv[])
     QFont font(QStringLiteral("WenQuanYi Micro Hei"));
     font.setPixelSize(15);
     app.setFont(font);
+    QPalette pal;
+    const QColor ink(32, 53, 66);
+    const QColor teal(17, 123, 112);
+    const QColor paper(244, 247, 246);
+    const QColor card(255, 255, 255);
+    for (int group = 0; group < QPalette::NColorGroups; ++group) {
+        const QPalette::ColorGroup g = static_cast<QPalette::ColorGroup>(group);
+        pal.setColor(g, QPalette::Window, paper);
+        pal.setColor(g, QPalette::WindowText, ink);
+        pal.setColor(g, QPalette::Base, card);
+        pal.setColor(g, QPalette::AlternateBase, QColor(231, 244, 241));
+        pal.setColor(g, QPalette::Text, ink);
+        pal.setColor(g, QPalette::Button, card);
+        pal.setColor(g, QPalette::ButtonText, ink);
+        pal.setColor(g, QPalette::Highlight, teal);
+        pal.setColor(g, QPalette::HighlightedText, Qt::white);
+        pal.setColor(g, QPalette::BrightText, ink);
+        pal.setColor(g, QPalette::Dark, teal);
+        pal.setColor(g, QPalette::Mid, QColor(197, 216, 212));
+        pal.setColor(g, QPalette::Light, QColor(231, 244, 241));
+        pal.setColor(g, QPalette::Midlight, QColor(215, 239, 233));
+        pal.setColor(g, QPalette::Shadow, QColor(138, 163, 158));
+    }
+    app.setPalette(pal);
 
     qmlRegisterType<sr::SceneCanvas>("SketchRoad", 1, 0, "SceneCanvas");
 

@@ -7,10 +7,18 @@ ScrollView {
     clip: true
 
     ColumnLayout {
-        width: col.availableWidth
+        width: Math.max(0, col.availableWidth - 8)
         spacing: 8
 
-        Label { text: "画布"; font.bold: true; color: "#203542" }
+        Item { Layout.preferredHeight: 8; Layout.fillWidth: true }
+        Label {
+            text: "画布"
+            font.bold: true
+            font.pixelSize: 16
+            color: "#117b70"
+            Layout.leftMargin: 8
+            Layout.topMargin: 4
+        }
         RowLayout {
             Label { text: "网格" }
             ComboBox {

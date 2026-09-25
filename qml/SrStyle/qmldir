@@ -1,0 +1,8 @@
+module SrStyle
+Button 2.14 Button.qml
+TabButton 2.14 TabButton.qml
+TabBar 2.14 TabBar.qml
+TextField 2.14 TextField.qml
+ItemDelegate 2.14 ItemDelegate.qml
+ComboBox 2.14 ComboBox.qml
+ToolButton 2.14 ToolButton.qml

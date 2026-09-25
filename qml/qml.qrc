@@ -1,4 +1,15 @@
 <RCC>
+    <qresource prefix="/">
+        <file alias="qtquickcontrols2.conf">qtquickcontrols2.conf</file>
+        <file>SrStyle/qmldir</file>
+        <file>SrStyle/Button.qml</file>
+        <file>SrStyle/ToolButton.qml</file>
+        <file>SrStyle/TabButton.qml</file>
+        <file>SrStyle/TabBar.qml</file>
+        <file>SrStyle/TextField.qml</file>
+        <file>SrStyle/ItemDelegate.qml</file>
+        <file>SrStyle/ComboBox.qml</file>
+    </qresource>
     <qresource prefix="/qml">
         <file>Main.qml</file>
         <file>HomePage.qml</file>
@@ -10,5 +21,6 @@
         <file>FormsPane.qml</file>
         <file>LibraryColumn.qml</file>
         <file>PropertyColumn.qml</file>
+        <file>ToolGlyph.qml</file>
     </qresource>
 </RCC>
