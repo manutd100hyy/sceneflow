@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file>Main.qml</file>
+        <file>HomePage.qml</file>
+        <file>CaseList.qml</file>
+        <file>Workspace.qml</file>
+        <file>CaseInfoPane.qml</file>
+        <file>EditorPane.qml</file>
+        <file>PhotosPane.qml</file>
+        <file>FormsPane.qml</file>
+        <file>LibraryColumn.qml</file>
+        <file>PropertyColumn.qml</file>
+    </qresource>
+</RCC>
