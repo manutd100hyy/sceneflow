@@ -1,4 +1,4 @@
-QT += core gui widgets testlib sql printsupport
+QT += core gui widgets testlib sql printsupport svg
 CONFIG += c++14 console
 CONFIG -= app_bundle
 TARGET = tst_core

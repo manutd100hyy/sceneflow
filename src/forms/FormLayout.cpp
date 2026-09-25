@@ -7,8 +7,32 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPainter>
+#include <QSvgRenderer>
 
 namespace sr {
+
+FormLayout::FormLayout() {}
+
+FormLayout::~FormLayout()
+{
+    qDeleteAll(m_svg);
+}
+
+QSvgRenderer *FormLayout::svgRenderer(const QString &path) const
+{
+    if (m_svg.contains(path))
+        return m_svg.value(path);
+    QSvgRenderer *renderer = 0;
+    if (QFile::exists(path)) {
+        renderer = new QSvgRenderer(path);
+        if (!renderer->isValid()) {
+            delete renderer;
+            renderer = 0;
+        }
+    }
+    m_svg.insert(path, renderer);
+    return renderer;
+}
 
 bool FormLayout::load(const QString &dataDir)
 {
@@ -70,11 +94,27 @@ const FormDef *FormLayout::find(const QString &id) const
 void FormLayout::paintPage(QPainter &painter, const FormPage &page, const QVariantMap &values) const
 {
     painter.save();
-    if (!page.imagePath.isEmpty()) {
-        const QImage image(page.imagePath);
-        if (!image.isNull())
-            painter.drawImage(QRectF(0, 0, page.width, page.height), image);
+    QString svgPath = page.imagePath;
+    if (svgPath.endsWith(QLatin1String(".png"), Qt::CaseInsensitive)) {
+        svgPath.chop(4);
+        svgPath += QLatin1String(".svg");
     } else {
+        svgPath.clear();
+    }
+    bool drewBackground = false;
+    if (QSvgRenderer *renderer = svgRenderer(svgPath)) {
+        painter.fillRect(QRectF(0, 0, page.width, page.height), Qt::white);
+        renderer->render(&painter, QRectF(0, 0, page.width, page.height));
+        drewBackground = true;
+    }
+    if (!drewBackground && !page.imagePath.isEmpty()) {
+        const QImage image(page.imagePath);
+        if (!image.isNull()) {
+            painter.drawImage(QRectF(0, 0, page.width, page.height), image);
+            drewBackground = true;
+        }
+    }
+    if (!drewBackground) {
         painter.fillRect(QRectF(0, 0, page.width, page.height), Qt::white);
         painter.setPen(Qt::black);
         painter.drawRect(QRectF(8, 8, page.width - 16, page.height - 16));

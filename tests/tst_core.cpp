@@ -7,7 +7,9 @@
 
 #include <QDir>
 #include <QFile>
+#include <QImage>
 #include <QJsonDocument>
+#include <QPainter>
 #include <QTemporaryDir>
 #include <QtTest>
 
@@ -236,8 +238,29 @@ void TstCore::vectorPdfHeader()
              qPrintable(error));
     QFile form(formPath);
     QVERIFY(form.open(QIODevice::ReadOnly));
-    QCOMPARE(form.read(5), QByteArray("%PDF-"));
-    QVERIFY(form.size() > 1000);
+    const QByteArray formBytes = form.readAll();
+    QCOMPARE(formBytes.left(5), QByteArray("%PDF-"));
+    QVERIFY(formBytes.size() > 1000);
+    // 表格线来自 SVG 路径，不应再把扫描底图嵌成图像。
+    QVERIFY(!formBytes.contains("/Subtype /Image"));
+    QVERIFY(!formBytes.contains("/Subtype/Image"));
+    QImage preview(400, 520, QImage::Format_ARGB32_Premultiplied);
+    preview.fill(Qt::white);
+    {
+        QPainter painter(&preview);
+        painter.scale(400.0 / 1536.0, 520.0 / 2048.0);
+        const FormDef *survey = forms.find(QStringLiteral("survey"));
+        QVERIFY(survey && !survey->pages.isEmpty());
+        forms.paintPage(painter, survey->pages.at(0), values);
+    }
+    int dark = 0;
+    for (int y = 40; y < preview.height() - 40; y += 3) {
+        for (int x = 20; x < preview.width() - 20; x += 3) {
+            if (qGray(preview.pixel(x, y)) < 180)
+                ++dark;
+        }
+    }
+    QVERIFY2(dark > 200, qPrintable(QString::number(dark)));
     QVERIFY(exportFormPdf(dir.path() + QStringLiteral("/cert-a3.pdf"), forms, QStringLiteral("certificate"),
                           values, QStringLiteral("A3"), &error));
 }

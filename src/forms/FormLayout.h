@@ -1,11 +1,13 @@
 #ifndef SR_FORMLAYOUT_H
 #define SR_FORMLAYOUT_H
 
+#include <QHash>
 #include <QString>
 #include <QVariantMap>
 #include <QVector>
 
 class QPainter;
+class QSvgRenderer;
 
 namespace sr {
 
@@ -34,13 +36,19 @@ struct FormDef {
 
 class FormLayout {
 public:
+    FormLayout();
+    ~FormLayout();
+
     bool load(const QString &dataDir);
     const QVector<FormDef> &forms() const;
     const FormDef *find(const QString &id) const;
     void paintPage(QPainter &painter, const FormPage &page, const QVariantMap &values) const;
 
 private:
+    QSvgRenderer *svgRenderer(const QString &path) const;
+
     QVector<FormDef> m_forms;
+    mutable QHash<QString, QSvgRenderer *> m_svg;
 };
 
 } // namespace sr
