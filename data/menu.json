@@ -480,6 +480,12 @@
           "uuid": "9D727BF4-F31B-45B4-804D-26D662817550"
         },
         {
+          "name": "电动自行车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C1C66CD2-FA1E-4353-8FE5-FD3C7F9E7304"
+        },
+        {
           "name": "自行车",
           "notification": "AddTufuNotification",
           "flag": 0,

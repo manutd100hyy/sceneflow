@@ -28,6 +28,7 @@ private slots:
     void vectorPdfHeader();
     void filletRightAngle();
     void proportionalizeRightAngle();
+    void libraryMenuResolvesSymbols();
 };
 
 void TstCore::offsetHorizontal()
@@ -320,6 +321,105 @@ void TstCore::filletRightAngle()
         }
     }
     QVERIFY(nearArc);
+}
+
+static QStringList libraryNames(const QVariantList &rows)
+{
+    QStringList names;
+    for (int i = 0; i < rows.size(); ++i)
+        names << rows.at(i).toMap().value(QStringLiteral("name")).toString();
+    return names;
+}
+
+static QVariantMap findMenuItem(const QVariantList &groups, const QString &name)
+{
+    for (int g = 0; g < groups.size(); ++g) {
+        const QVariantList items = groups.at(g).toMap().value(QStringLiteral("items")).toList();
+        for (int i = 0; i < items.size(); ++i) {
+            const QVariantMap row = items.at(i).toMap();
+            if (row.value(QStringLiteral("name")).toString() == name)
+                return row;
+        }
+    }
+    return QVariantMap();
+}
+
+void TstCore::libraryMenuResolvesSymbols()
+{
+    Catalog catalog;
+    QString error;
+    const QString dataDir = QString::fromUtf8(SR_DATA_DIR);
+    QVERIFY2(catalog.load(dataDir, &error), qPrintable(error));
+
+    const QVariantList groups = catalog.libraryGroups();
+    QVERIFY(!groups.isEmpty());
+    QCOMPARE(groups.at(0).toMap().value(QStringLiteral("name")).toString(), QStringLiteral("常用"));
+
+    QStringList accident;
+    int symbolItems = 0;
+    for (int g = 0; g < groups.size(); ++g) {
+        const QVariantMap group = groups.at(g).toMap();
+        const QVariantList items = group.value(QStringLiteral("items")).toList();
+        if (group.value(QStringLiteral("name")).toString() == QStringLiteral("交通事故元素")) {
+            for (int i = 0; i < items.size(); ++i)
+                accident << items.at(i).toMap().value(QStringLiteral("name")).toString();
+        }
+        for (int i = 0; i < items.size(); ++i) {
+            const QVariantMap row = items.at(i).toMap();
+            if (row.value(QStringLiteral("notification")).toString() != QLatin1String("AddTufuNotification"))
+                continue;
+            const QString resolved = catalog.resolveSymbolName(
+                    row.value(QStringLiteral("uuid")).toString(),
+                    row.value(QStringLiteral("name")).toString());
+            QVERIFY2(!resolved.isEmpty(), qPrintable(group.value(QStringLiteral("name")).toString()
+                                                      + QLatin1Char('/') + row.value(QStringLiteral("name")).toString()));
+            ++symbolItems;
+        }
+    }
+    QVERIFY(symbolItems > 100);
+    QVERIFY(accident.contains(QStringLiteral("小轿车")));
+    QVERIFY(accident.contains(QStringLiteral("客车")));
+    QVERIFY(accident.contains(QStringLiteral("货车")));
+    QVERIFY(accident.contains(QStringLiteral("电动自行车")));
+
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("高速服务区")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("高速服务区")),
+             QStringLiteral("高速公路服务区"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("公、铁路交口")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("公、铁路交口")),
+             QStringLiteral("道路与铁路平交口"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("机动车行驶轨迹")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("机动车行驶轨迹")),
+             QStringLiteral("机动车行驶方向"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("摩托车行驶轨迹")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("摩托车行驶轨迹")),
+             QStringLiteral("非机动车行驶方向"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("行人运动轨迹")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("行人运动轨迹")),
+             QStringLiteral("人员行驶方向"));
+
+    const QStringList common = libraryNames(catalog.searchLibrary(QString(), 0));
+    QVERIFY(common.contains(QStringLiteral("小轿车")));
+    QVERIFY(common.contains(QStringLiteral("客车")));
+    QVERIFY(common.contains(QStringLiteral("货车")));
+    QVERIFY(!common.contains(QStringLiteral("桥梁")));
+
+    const QStringList truckAlias = libraryNames(catalog.searchLibrary(QStringLiteral("小货车"), 0));
+    QVERIFY(truckAlias.contains(QStringLiteral("货车")));
+    QVERIFY(libraryNames(catalog.searchLibrary(QStringLiteral("轻型货车"), 0)).contains(QStringLiteral("货车")));
+    const QStringList van = libraryNames(catalog.searchLibrary(QStringLiteral("面包车"), 0));
+    QVERIFY(van.contains(QStringLiteral("客车")));
+    QVERIFY(van.contains(QStringLiteral("小轿车")));
+    QVERIFY(libraryNames(catalog.searchLibrary(QStringLiteral("桥梁"), 0)).contains(QStringLiteral("桥梁")));
+    QCOMPARE(libraryNames(catalog.searchLibrary(QStringLiteral("小轿车"), 2)).count(QStringLiteral("小轿车")), 1);
+
+    const QVariantMap car = findMenuItem(groups, QStringLiteral("小轿车"));
+    QVERIFY(car.value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_car.png")));
+    QVERIFY(findMenuItem(groups, QStringLiteral("客车")).value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_bus.png")));
+    QVERIFY(findMenuItem(groups, QStringLiteral("货车")).value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_truck.png")));
+    QVERIFY(findMenuItem(groups, QStringLiteral("人体")).value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_person.png")));
+    const QString iconFile = QDir(dataDir).absoluteFilePath(QStringLiteral("../assets/menuicons/Symbols/symbol_car.png"));
+    QVERIFY2(QFile::exists(iconFile), qPrintable(iconFile));
 }
 
 QTEST_MAIN(TstCore)

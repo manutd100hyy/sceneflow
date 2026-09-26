@@ -20,6 +20,7 @@
         <file>PhotosPane.qml</file>
         <file>FormsPane.qml</file>
         <file>LibraryColumn.qml</file>
+        <file>IconThumb.qml</file>
         <file>PropertyColumn.qml</file>
         <file>ToolGlyph.qml</file>
     </qresource>

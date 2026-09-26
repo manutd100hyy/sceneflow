@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QEventLoop>
 #include <QFile>
 #include <QFileInfo>
@@ -747,7 +748,7 @@ void AppController::placeTemplate(const QString &id)
     emit updated();
 }
 
-void AppController::activateLibrary(const QString &name, const QString &notification, int flag)
+void AppController::activateLibrary(const QString &name, const QString &notification, int flag, const QString &uuid)
 {
     if (!m_canvas)
         return;
@@ -770,12 +771,28 @@ void AppController::activateLibrary(const QString &name, const QString &notifica
         return;
     }
     if (notification == QLatin1String("onUsePencilDrawingDimension")) { setTool(6); return; }
-    if (m_catalog.symbol(name)) {
-        m_canvas->setSymbolName(name);
+    const QString resolved = m_catalog.resolveSymbolName(uuid, name);
+    if (!resolved.isEmpty()) {
+        m_canvas->setSymbolName(resolved);
         setTool(3);
         m_message = QStringLiteral("单击画布放置 ") + name;
         emit updated();
     }
+}
+
+QVariantList AppController::searchLibrary(const QString &query, int groupIndex) const
+{
+    return m_catalog.searchLibrary(query, groupIndex);
+}
+
+void AppController::openSymbolLibrary()
+{
+    emit symbolLibraryRequested();
+}
+
+void AppController::closeSymbolLibrary()
+{
+    emit symbolLibraryClosed();
 }
 
 void AppController::undo() { m_document.undo(); }
@@ -1062,21 +1079,32 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
             window->update();
         QCoreApplication::processEvents();
     };
+    const auto pump = [window](int ms) {
+        QElapsedTimer timer;
+        timer.start();
+        while (timer.elapsed() < ms)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 40);
+        if (window)
+            window->update();
+        QCoreApplication::processEvents();
+    };
     const auto grab = [&](const QString &name) {
         settle();
         if (!window)
             return;
-        QImage image = window->grabWindow();
-        if (image.isNull() && window->contentItem()) {
+        QImage image;
+        if (window->contentItem()) {
             const QSharedPointer<QQuickItemGrabResult> shot = window->contentItem()->grabToImage();
             if (shot) {
                 QEventLoop loop;
                 QObject::connect(shot.data(), &QQuickItemGrabResult::ready, &loop, &QEventLoop::quit);
-                QTimer::singleShot(1500, &loop, &QEventLoop::quit);
+                QTimer::singleShot(2000, &loop, &QEventLoop::quit);
                 loop.exec();
                 image = shot->image();
             }
         }
+        if (image.isNull())
+            image = window->grabWindow();
         const QString path = QDir(directory).filePath(name + QStringLiteral(".png"));
         if (image.isNull() || !image.save(path))
             qWarning("截图失败: %s (%dx%d)", qPrintable(name), image.width(), image.height());
@@ -1097,7 +1125,10 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
     resizeTo(1360, 860);
     m_tab = 1;
     emit updated();
+    openSymbolLibrary();
+    pump(400);
     grab(QStringLiteral("03-editor-desktop"));
+    grab(QStringLiteral("11-library-desktop"));
     m_tab = 0;
     emit updated();
     grab(QStringLiteral("04-case-info"));
@@ -1114,6 +1145,11 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
     resizeTo(390, 844);
     emit updated();
     grab(QStringLiteral("08-editor-phone"));
+    openSymbolLibrary();
+    pump(800);
+    grab(QStringLiteral("12-library-phone"));
+    closeSymbolLibrary();
+    pump(300);
     m_showCases = true;
     refreshCases(QString());
     emit updated();

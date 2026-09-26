@@ -67,7 +67,12 @@ Item {
                         delegate: Button {
                             id: toolBtn
                             highlighted: app.tool === modelData.tool
-                            onClicked: app.tool = modelData.tool
+                            onClicked: {
+                                if (modelData.tool === 3)
+                                    app.openSymbolLibrary()
+                                else
+                                    app.tool = modelData.tool
+                            }
                             width: 58
                             height: phone ? 56 : 62
                             leftPadding: 2
@@ -137,7 +142,7 @@ Item {
                     anchors.fill: parent
                     anchors.margins: 6
                     spacing: 6
-                    Button { text: "图符"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: libDrawer.open() }
+                    Button { text: "图符"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: app.openSymbolLibrary() }
                     Button { text: "标注"; Layout.fillWidth: true; Layout.fillHeight: true; highlighted: app.tool === 6; onClicked: app.tool = 6 }
                     Button { text: "属性"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: propDrawer.open() }
                     Button { text: "更多"; Layout.fillWidth: true; Layout.fillHeight: true; onClicked: moreDrawer.open() }
@@ -165,17 +170,39 @@ Item {
         anchors.top: parent.top
         anchors.topMargin: 58
         anchors.leftMargin: 8
-        onClicked: libDrawer.open()
+        onClicked: libraryOpen = true
         height: 40
         z: 2
     }
 
-    Drawer {
-        id: libDrawer
-        edge: Qt.LeftEdge
-        width: Math.min(editor.width * 0.86, 320)
-        height: editor.height
-        LibraryColumn { anchors.fill: parent }
+    property bool libraryOpen: false
+
+    Connections {
+        target: app
+        onSymbolLibraryRequested: if (!desktop) libraryOpen = true
+        onSymbolLibraryClosed: libraryOpen = false
+    }
+
+    Rectangle {
+        visible: libraryOpen && !desktop
+        anchors.fill: parent
+        color: "#66000000"
+        z: 4
+        MouseArea {
+            anchors.fill: parent
+            onClicked: libraryOpen = false
+        }
+    }
+    Rectangle {
+        visible: libraryOpen && !desktop
+        z: 5
+        width: Math.min(parent.width * 0.92, 340)
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        color: "white"
+        MouseArea { anchors.fill: parent; z: 0 }
+        LibraryColumn { anchors.fill: parent; z: 1 }
     }
     Drawer {
         id: propDrawer

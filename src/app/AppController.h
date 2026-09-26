@@ -35,8 +35,8 @@ class AppController : public QObject {
     Q_PROPERTY(QString hint READ hint NOTIFY updated)
     Q_PROPERTY(QVariantMap selection READ selection NOTIFY selectionChanged)
     Q_PROPERTY(QVariantList objects READ objects NOTIFY updated)
-    Q_PROPERTY(QVariantList templates READ templates NOTIFY updated)
-    Q_PROPERTY(QVariantList groups READ groups NOTIFY updated)
+    Q_PROPERTY(QVariantList templates READ templates CONSTANT)
+    Q_PROPERTY(QVariantList groups READ groups CONSTANT)
     Q_PROPERTY(QVariantList cases READ cases NOTIFY updated)
     Q_PROPERTY(bool showCases READ showCases WRITE setShowCases NOTIFY updated)
     Q_PROPERTY(int laneCount READ laneCount WRITE setLaneCount NOTIFY updated)
@@ -113,7 +113,10 @@ public:
     Q_INVOKABLE bool deleteCase(const QString &id);
     Q_INVOKABLE bool duplicateCase(const QString &id);
     Q_INVOKABLE void placeTemplate(const QString &id);
-    Q_INVOKABLE void activateLibrary(const QString &name, const QString &notification, int flag);
+    Q_INVOKABLE void activateLibrary(const QString &name, const QString &notification, int flag, const QString &uuid);
+    Q_INVOKABLE QVariantList searchLibrary(const QString &query, int groupIndex) const;
+    Q_INVOKABLE void openSymbolLibrary();
+    Q_INVOKABLE void closeSymbolLibrary();
     Q_INVOKABLE void undo();
     Q_INVOKABLE void redo();
     Q_INVOKABLE void removeSelection();
@@ -148,6 +151,8 @@ signals:
     void screenChanged();
     void selectionChanged();
     void textRequested(double x, double y);
+    void symbolLibraryRequested();
+    void symbolLibraryClosed();
 
 private:
     void enterScreen(const QString &name);
