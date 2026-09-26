@@ -1,31 +1,31 @@
 <RCC>
     <qresource prefix="/menuicons">
-        <file>HandPaintedRoad/人行横道.png</file>
-        <file>HandPaintedRoad/分道线.png</file>
-        <file>HandPaintedRoad/导流渠.png</file>
-        <file>HandPaintedRoad/文字.png</file>
-        <file>HandPaintedRoad/标注线.png</file>
-        <file>HandPaintedRoad/铅笔画路.png</file>
+        <file>HandPaintedRoad/crosswalk.png</file>
+        <file>HandPaintedRoad/lane_divider.png</file>
+        <file>HandPaintedRoad/channelization.png</file>
+        <file>HandPaintedRoad/text_note.png</file>
+        <file>HandPaintedRoad/dimension_line.png</file>
+        <file>HandPaintedRoad/pencil_road.png</file>
         <file>RoadTemplates/S-Road.png</file>
-        <file>RoadTemplates/丁字路口.png</file>
-        <file>RoadTemplates/五岔路口.png</file>
-        <file>RoadTemplates/入口匝道.png</file>
-        <file>RoadTemplates/六岔路口.png</file>
-        <file>RoadTemplates/出口匝道.png</file>
-        <file>RoadTemplates/十字路口.png</file>
-        <file>RoadTemplates/国道（路肩）.png</file>
-        <file>RoadTemplates/宽变窄路段.png</file>
-        <file>RoadTemplates/市内路段.png</file>
-        <file>RoadTemplates/弯道.png</file>
-        <file>RoadTemplates/直角弯道.png</file>
-        <file>RoadTemplates/高速收费站.png</file>
-        <file>RoadTemplates/高速港湾.png</file>
-        <file>RoadTemplates/高速路段.png</file>
-        <file>Symbols/T形交叉.png</file>
-        <file>Symbols/Y形交叉.png</file>
-        <file>Symbols/symbol_ cartwheel.png</file>
-        <file>Symbols/symbol_ electromobile.png</file>
-        <file>Symbols/symbol_ together.png</file>
+        <file>RoadTemplates/t_junction.png</file>
+        <file>RoadTemplates/five_way.png</file>
+        <file>RoadTemplates/entrance_ramp.png</file>
+        <file>RoadTemplates/six_way.png</file>
+        <file>RoadTemplates/exit_ramp.png</file>
+        <file>RoadTemplates/crossroad.png</file>
+        <file>RoadTemplates/national_shoulder.png</file>
+        <file>RoadTemplates/narrowing.png</file>
+        <file>RoadTemplates/urban_segment.png</file>
+        <file>RoadTemplates/curve.png</file>
+        <file>RoadTemplates/right_angle_curve.png</file>
+        <file>RoadTemplates/toll_station.png</file>
+        <file>RoadTemplates/highway_bay.png</file>
+        <file>RoadTemplates/highway_segment.png</file>
+        <file>Symbols/t_intersection.png</file>
+        <file>Symbols/y_intersection.png</file>
+        <file>Symbols/symbol_cartwheel.png</file>
+        <file>Symbols/symbol_electromobile.png</file>
+        <file>Symbols/symbol_together.png</file>
         <file>Symbols/symbol_AnimaldrawnVehicle.png</file>
         <file>Symbols/symbol_AnimaldrawnVehicle_b.png</file>
         <file>Symbols/symbol_Deposits.png</file>
@@ -166,26 +166,26 @@
         <file>Symbols/symbol_vehicle.png</file>
         <file>Symbols/symbol_warter.png</file>
         <file>Symbols/symbol_wellpits.png</file>
-        <file>Symbols/symbol_伤person.png</file>
+        <file>Symbols/symbol_injured_person.png</file>
         <file>Symbols/symbole_Rickshaw.png</file>
-        <file>Symbols/上陡坡.png</file>
-        <file>Symbols/下陡坡.png</file>
-        <file>Symbols/事故易发路段.png</file>
-        <file>Symbols/先被屏蔽symbol_car.png</file>
-        <file>Symbols/十字交叉.png</file>
-        <file>Symbols/双向交通.png</file>
-        <file>Symbols/向右急转弯.png</file>
-        <file>Symbols/向左急转弯.png</file>
-        <file>Symbols/左侧变窄.png</file>
-        <file>Symbols/施工.png</file>
-        <file>Symbols/更多@2x~ipad.png</file>
-        <file>Symbols/注意信号灯.png</file>
-        <file>Symbols/注意危险.png</file>
-        <file>Symbols/注意行人.png</file>
-        <file>Symbols/电瓶车.png</file>
-        <file>Symbols/车轮.png</file>
-        <file>Symbols/限速标志.png</file>
-        <file>Symbols/隧道.png</file>
-        <file>Symbols/高速收费口.png</file>
+        <file>Symbols/steep_ascent.png</file>
+        <file>Symbols/steep_descent.png</file>
+        <file>Symbols/accident_prone.png</file>
+        <file>Symbols/symbol_shielded_car.png</file>
+        <file>Symbols/cross_intersection.png</file>
+        <file>Symbols/two_way_traffic.png</file>
+        <file>Symbols/sharp_right.png</file>
+        <file>Symbols/sharp_left.png</file>
+        <file>Symbols/narrow_left.png</file>
+        <file>Symbols/road_work.png</file>
+        <file>Symbols/more_ipad.png</file>
+        <file>Symbols/signal_ahead.png</file>
+        <file>Symbols/danger_ahead.png</file>
+        <file>Symbols/pedestrian_ahead.png</file>
+        <file>Symbols/battery_bike.png</file>
+        <file>Symbols/wheel.png</file>
+        <file>Symbols/speed_limit.png</file>
+        <file>Symbols/tunnel_sign.png</file>
+        <file>Symbols/toll_gate.png</file>
     </qresource>
 </RCC>

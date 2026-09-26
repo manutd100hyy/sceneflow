@@ -1,4 +1,4 @@
-import QtQuick 2.14
+﻿import QtQuick 2.14
 import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.14
 import SketchRoad 1.0
@@ -17,6 +17,22 @@ Item {
         while (p && !p.openAerialDialog)
             p = p.parent
         return p
+    }
+    function toolModel() {
+        return [
+            ({ tool: 0, text: "选择", glyph: "select" }),
+            ({ tool: 1, text: "平移", glyph: "pan" }),
+            ({ tool: 2, text: "道路", glyph: "road", library: 0 }),
+            ({ tool: 3, text: "图符", glyph: "symbol", library: 1 }),
+            ({ tool: 6, text: "标注", glyph: "dimension", library: 2 }),
+            ({ tool: 4, text: "痕迹", glyph: "trace" }),
+            ({ tool: 5, text: "散落", glyph: "debris" }),
+            ({ tool: 7, text: "文字", glyph: "text" }),
+            ({ tool: 8, text: "横道", glyph: "crosswalk" }),
+            ({ tool: 9, text: "箭头", glyph: "guide" }),
+            ({ tool: 10, text: "环岛", glyph: "circle" }),
+            ({ tool: 11, text: "橡皮", glyph: "eraser" })
+        ]
     }
     function showLibrary(tab) {
         libraryTab = tab
@@ -57,20 +73,8 @@ Item {
                         spacing: 5
                         anchors.verticalCenter: parent.verticalCenter
                         Repeater {
-                            model: [
-                                { tool: 0, text: "选择", glyph: "select" },
-                                { tool: 1, text: "平移", glyph: "pan" },
-                                { tool: 2, text: "道路", glyph: "road", library: 0 },
-                                { tool: 3, text: "图符", glyph: "symbol", library: 1 },
-                                { tool: 6, text: "标注", glyph: "dimension", library: 2 },
-                                { tool: 4, text: "痕迹", glyph: "trace" },
-                                { tool: 5, text: "散落", glyph: "debris" },
-                                { tool: 7, text: "文字", glyph: "text" },
-                                { tool: 8, text: "横道", glyph: "crosswalk" },
-                                { tool: 9, text: "箭头", glyph: "guide" },
-                                { tool: 10, text: "环岛", glyph: "circle" },
-                                { tool: 11, text: "橡皮", glyph: "eraser" }
-                            ]
+                            // 括号里的对象字面量。Qt 5.14 的 QML 解析器会把裸的 { 当成对象，逗号处报 Expected token。
+                            model: editor.toolModel()
                             delegate: Button {
                                 id: toolBtn
                                 highlighted: modelData.library === undefined && app.tool === modelData.tool
