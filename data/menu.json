@@ -1,0 +1,1021 @@
+{
+  "templates": [
+    {
+      "name": "S型弯路",
+      "id": "BAAE495E-780B-46E1-83C7-6174907DB627"
+    },
+    {
+      "name": "入口匝路（横）",
+      "id": "91C21696-9A11-46DB-A1C7-836E2A16D093"
+    },
+    {
+      "name": "入口匝路（竖）",
+      "id": "B6DB7B5E-800E-4609-8485-232D782C49EB"
+    },
+    {
+      "name": "市内路段",
+      "id": "843D1CB9-A47C-43EF-BC3E-375C0411FB14"
+    },
+    {
+      "name": "弯路",
+      "id": "EEEFBB28-2FCE-44F5-9201-ADBE6A1C257F"
+    },
+    {
+      "name": "五岔路口",
+      "id": "17D79220-0AC9-4A3D-8234-8765732A4797"
+    },
+    {
+      "name": "六岔路口",
+      "id": "EE20156B-7C4F-4434-9683-B022CD3F37AC"
+    },
+    {
+      "name": "十字路口",
+      "id": "670FA995-9D7B-42A7-BC30-330E566A7573"
+    },
+    {
+      "name": "国道路肩",
+      "id": "C5743CE1-4283-465B-B8D8-0521D13EF489"
+    },
+    {
+      "name": "直角弯路",
+      "id": "B437C9DC-B039-4008-93C8-434192A708AA"
+    },
+    {
+      "name": "丁字路口",
+      "id": "62AB9ACB-A369-4981-BDFD-C79193FAAB71"
+    },
+    {
+      "name": "标准出匝（横）",
+      "id": "9E287ACC-ACFB-4D9D-A473-C73D436DFEE8"
+    },
+    {
+      "name": "标准出匝（竖）",
+      "id": "3DDA766D-BC70-4FDE-949B-1375CF22234C"
+    },
+    {
+      "name": "高速收费口（竖）",
+      "id": "AB41FD7A-55EA-4804-AA30-354444C16C4E"
+    },
+    {
+      "name": "高速收费口（横）",
+      "id": "BC5715DD-3313-4E7E-BF90-4F9BAF9B095B"
+    },
+    {
+      "name": "高速港湾（竖）",
+      "id": "F2346B99-E8EA-4113-AD7D-ECB9FDE56268"
+    },
+    {
+      "name": "高速港湾（横）",
+      "id": "9F258A79-33BA-4952-8A19-EA824906E27D"
+    },
+    {
+      "name": "单向单车",
+      "id": "9B66BF4C-6F84-4A22-BE61-FC4941A6C113"
+    },
+    {
+      "name": "单向双车道(右侧)",
+      "id": "C8E45634-87B6-4DBC-9EDB-CB731C39EAA8"
+    },
+    {
+      "name": "单向双车道(左侧)",
+      "id": "C8E45634-87B6-4DBC-9EDB-CB731C39EAA9"
+    },
+    {
+      "name": "单向三车道(右侧)",
+      "id": "C8E45634-87B6-4DBC-9EDB-CB731C39EAB8"
+    },
+    {
+      "name": "单向三车道(左侧)",
+      "id": "C8E45634-87B6-4DBC-9EDB-CB731C39EAB9"
+    },
+    {
+      "name": "单向四车道(右侧)",
+      "id": "C8E45634-87B6-4DBC-9EDB-CB731C39EBB8"
+    },
+    {
+      "name": "单向四车道(左侧)",
+      "id": "C8E45634-87B6-4DBC-9EDB-CB731C39EBB9"
+    },
+    {
+      "name": "双向四车道",
+      "id": "D8E45634-87B6-4DBC-9EDB-CB731C39EBB9"
+    },
+    {
+      "name": "双向六车道（横）",
+      "id": "E8E45634-87B6-4DBC-9EDB-CB731C39EBB9"
+    },
+    {
+      "name": "双向六车道（竖）",
+      "id": "AA957B3D-747F-431F-B768-AC2A0F9A36CB"
+    },
+    {
+      "name": "双向八车道",
+      "id": "F8E45634-87B6-4DBC-9EDB-CB731C39EBB9"
+    },
+    {
+      "name": "单向双车道入口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39EAA8"
+    },
+    {
+      "name": "单向双车道出口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39EAA9"
+    },
+    {
+      "name": "单向三车道入口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C30EAB8"
+    },
+    {
+      "name": "单向三车道出口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39EAB1"
+    },
+    {
+      "name": "单向四车道入口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39EBB2"
+    },
+    {
+      "name": "单向四车道出口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39EBB3"
+    },
+    {
+      "name": "双向四车道入口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39BBB4"
+    },
+    {
+      "name": "双向四车道出口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C39BBB5"
+    },
+    {
+      "name": "双向六车道入口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C30BBB6"
+    },
+    {
+      "name": "双向六车道出口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C30BBB9"
+    },
+    {
+      "name": "双向八车道入口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C38BBB8"
+    },
+    {
+      "name": "双向八车道出口",
+      "id": "C8E45634-87AA-4DBC-9EDB-CB731C38BBB7"
+    },
+    {
+      "name": "标准桥梁（横）",
+      "id": "5C26B767-7D9F-4841-8D95-F6FABAEEB204"
+    },
+    {
+      "name": "标准桥梁（竖）",
+      "id": "F3E4A612-CE67-4D88-9D37-E507C89BF533"
+    },
+    {
+      "name": "标准护栏（横）",
+      "id": "F78CC4D1-EE28-4874-A9C0-FDDAF5225778"
+    },
+    {
+      "name": "标准护栏（竖）",
+      "id": "C6C94652-DEA1-4944-BA10-2E48DBB7FFF9"
+    }
+  ],
+  "groups": [
+    {
+      "name": "手绘道路",
+      "items": [
+        {
+          "name": "双车道",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "02322F12-4DC4-4902-9795-DB19312D1E54"
+        },
+        {
+          "name": "四车道",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "25CC40DD-D651-46d9-9111-FF50FB1-D933"
+        },
+        {
+          "name": "铅笔画路",
+          "notification": "PencilDrawingWay",
+          "flag": 2,
+          "uuid": "02322F12-4DC4-4902-9795-DB19312D1E54"
+        },
+        {
+          "name": "环岛",
+          "notification": "PencilDrawingCircle",
+          "flag": 2,
+          "uuid": "44B5E2BB-7D80-493E-BDD0-96F5F787EE51"
+        },
+        {
+          "name": "人行横道",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "1D7F9984-6AAA-4fc1-B3BE-4A90131C562E"
+        },
+        {
+          "name": "分道线",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "E068D4A2-811F-4D9E-94F5-FE37770EE2E4"
+        },
+        {
+          "name": "转向标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "CB5EF364-AB9B-4284-9FCB-99FDC7B2FA37"
+        },
+        {
+          "name": "文字注释",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "810C8FC6-0AAF-419a-A89E-AE263720F170"
+        },
+        {
+          "name": "剖面图机动车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "9B16C3CD-2B52-4EF9-86B2-0AA8D1F7EA0E"
+        },
+        {
+          "name": "剖面图水坑",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "43FD82EE-E28A-461D-AF74-5B6A4FD1A2F7"
+        },
+        {
+          "name": "左转待转区",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "12922C7C-7FCE-4C21-9FB0-F653EC8BC7F5"
+        },
+        {
+          "name": "直行等待区",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "d2c15993-150d-4535-b79c-241cf8ccbfe8"
+        },
+        {
+          "name": "驱动点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "2D18F042-EF3C-4A06-929D-0670A77FB569"
+        }
+      ]
+    },
+    {
+      "name": "地面物体图形符号",
+      "items": [
+        {
+          "name": "路墩",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C9CA476E-B9A1-4705-ABA8-5A8C5301DF7B"
+        },
+        {
+          "name": "电线杆",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C9CA476E-B9A1-4705-ADA8-5A8C5301DF69"
+        },
+        {
+          "name": "树木",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "D1B4DF74-CE71-4c8d-8C41-5D885D9DF11E"
+        },
+        {
+          "name": "路灯",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "5F82C085-F582-46d8-B73C-51B1D8C719C2"
+        },
+        {
+          "name": "邮筒",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "09E1A018-007E-45d0-A03A-F9F6E53F2428"
+        },
+        {
+          "name": "井盖",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "04484E72-D603-4ca9-8EE1-4B7D330057D1"
+        },
+        {
+          "name": "电话亭",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F4F6D6B6-D414-4fe3-818A-D69E2B8F3036"
+        },
+        {
+          "name": "里程碑",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "2DA52016-7F98-4931-970C-2CE83E98385D"
+        },
+        {
+          "name": "消防栓",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "D4C93EE3-E511-4A9D-A90F-34547F34E6AD"
+        },
+        {
+          "name": "加油站",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "B3A0FC85-37C2-4280-9568-9977235CC3C5"
+        },
+        {
+          "name": "停车场",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "CC624EE9-EF33-4F7D-9488-E10F809E1852"
+        },
+        {
+          "name": "高速服务区",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "9B463757-85E1-4932-964D-AB64ABA8FF47"
+        },
+        {
+          "name": "堆积物",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "2D9D8FB8-074D-4D7A-9241-EC3812B7CE25"
+        },
+        {
+          "name": "建筑物",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "02B253F6-10A3-4A87-B881-375FEFD7642D"
+        },
+        {
+          "name": "围墙及大门",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "FB6A059C-428A-4118-BDA5-E6CBBB81DEFD"
+        },
+        {
+          "name": "其他物品",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "803F2022-46CB-4104-BCEF-774360AAED13"
+        },
+        {
+          "name": "散落物",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "803F2022-46CB-4104-BCEF-774360AAED14"
+        },
+        {
+          "name": "交通标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "04484E72-D603-4ca9-8EE1-4B7D330057D2"
+        },
+        {
+          "name": "限速标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "73484E72-D603-4ca9-8EE1-4B7D830317A2"
+        }
+      ]
+    },
+    {
+      "name": "交通事故元素",
+      "items": [
+        {
+          "name": "小轿车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "71DBC424-8149-49f1-9590-19626F0A1F3A"
+        },
+        {
+          "name": "客车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "FA112200-3CB1-4cca-91E7-C0976A1D9D50"
+        },
+        {
+          "name": "货车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "A8BB0BB7-5B1C-4bbb-9059-8B049F000932"
+        },
+        {
+          "name": "半挂车双排",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "AC46EE8C-AE74-CFD7-D97B-05EFC532DEF9"
+        },
+        {
+          "name": "半挂车单排",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F45AD6F8-C779-A729-3488-CE232649FA22"
+        },
+        {
+          "name": "平头货车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "810C8FC6-0AAF-419a-A89E-AE263720F190"
+        },
+        {
+          "name": "牵引车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "620312BC-36EB-49a5-8D0E-8916B82FF00B"
+        },
+        {
+          "name": "挂车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "A99647F6-643F-4814-8BAB-30E3EC579C97"
+        },
+        {
+          "name": "电车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "DDEBAB12-DD00-4a36-9E5A-FFBD3588AAE5"
+        },
+        {
+          "name": "拖拉机",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "EED6A9FB-8B6E-443A-9ACA-96B33C33859C"
+        },
+        {
+          "name": "手扶式拖拉机",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "2E0EC6D6-A42A-8b8e-804E-D5989F20D0FB"
+        },
+        {
+          "name": "二轮摩托车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "10505300-A8DA-4d25-B7C2-B32A-FA423F5"
+        },
+        {
+          "name": "正三轮机动车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "8483D0EF-857C-4bc6-9F7D-DA23C8AE4543"
+        },
+        {
+          "name": "侧三轮摩托车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "34B65533-64A8-4d5a-95C7-9C6B700008B2A"
+        },
+        {
+          "name": "轮式自行机械",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "21BC140F-CCF4-4ff8-B7BD-9084336BDAE0"
+        },
+        {
+          "name": "电瓶车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "9D727BF4-F31B-45B4-804D-26D662817550"
+        },
+        {
+          "name": "自行车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C4117A21-2C6D-4f4c-B5E0-3399D2A58D9B"
+        },
+        {
+          "name": "残疾人用车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "240E0886-F488-4337-B778-CAFA9427EC3F"
+        },
+        {
+          "name": "三轮车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "CE638B7A-00F8-4579-8943-096D3EE5A252"
+        },
+        {
+          "name": "人力车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "83275A0C-F7FB-46bd-930A-0AD04C23C3A8"
+        },
+        {
+          "name": "畜力车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "870404AC-AD50-4c66-9970-E9566C5D872B"
+        },
+        {
+          "name": "人体",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "DA12F989-F667-4d4d-BB93-D519D68C71B0"
+        },
+        {
+          "name": "尸体",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "61EF8580-7E2F-43ef-8511-6860788648A3"
+        },
+        {
+          "name": "伤体",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "735B4353-2F42-4eef-9E5E-686B13C6B712"
+        },
+        {
+          "name": "死畜",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "31934351-E032-4daf-85BA-D64B1C18221D"
+        },
+        {
+          "name": "伤畜",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "39B3D332-3CB7-4acc-92F5-D3BF1F56A96F"
+        },
+        {
+          "name": "牲畜",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "DC0DC39D-BE27-444b-9455-A28A289975AD"
+        },
+        {
+          "name": "车轮",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "ABCEF854-F289-4577-A3CE-D2C237713B11"
+        }
+      ]
+    },
+    {
+      "name": "痕迹散落物",
+      "items": [
+        {
+          "name": "轮胎滚印",
+          "notification": "PencilDrawingTrace",
+          "flag": 0,
+          "uuid": "2BFA0D33-BBDB-4F62-91D5-991723DFCAB4"
+        },
+        {
+          "name": "轮胎拖印",
+          "notification": "PencilDrawingTrace",
+          "flag": 1,
+          "uuid": "71DBC424-8149-49f1-9590-19626F0A1F3B"
+        },
+        {
+          "name": "双胎拖印",
+          "notification": "PencilDrawingTrace",
+          "flag": 2,
+          "uuid": "CDFA46FE-CB07-495F-B5B2-6E602802D60F"
+        },
+        {
+          "name": "轮胎压印",
+          "notification": "PencilDrawingTrace",
+          "flag": 3,
+          "uuid": "EDA190C4-167B-4DF4-8DEB-696B75A881D9"
+        },
+        {
+          "name": "轮胎侧滑印",
+          "notification": "PencilDrawingTrace",
+          "flag": 4,
+          "uuid": "1B02AF58-3BC4-46DF-B0D9-C9E1B0BFB7D7"
+        },
+        {
+          "name": "挫伤印",
+          "notification": "PencilDrawingTrace",
+          "flag": 5,
+          "uuid": "1F90EDCA-0E04-4C12-AA85-E25AA3DCF6A3"
+        },
+        {
+          "name": "自行车压印",
+          "notification": "PencilDrawingTrace",
+          "flag": 6,
+          "uuid": "625118C2-B896-4776-99A4-555C9511032F"
+        },
+        {
+          "name": "道路标注",
+          "notification": "onUsePencilDrawingDimension",
+          "flag": 0,
+          "uuid": "C3BF9247-DEBA-415D-9175-C0936E5FD5C4"
+        },
+        {
+          "name": "血迹",
+          "notification": "PencilDrawingFallout",
+          "flag": 0,
+          "uuid": "98473BD9-0CFD-4932-A98A-93440E9829B5"
+        },
+        {
+          "name": "散落物",
+          "notification": "PencilDrawingFallout",
+          "flag": 2,
+          "uuid": "D44C850F-018A-4F47-9EB2-B794F5FB63F4\nD44C850F-018A-4F47-9EB2-B794F5FB63F4\nD44C850F-018A-4F47-9EB2-B794F5FB63F4"
+        },
+        {
+          "name": "点状散落物",
+          "notification": "PencilDrawingFallout",
+          "flag": 1,
+          "uuid": "D7C71B57-53DB-4A08-8BCD-2FA6BA91391C"
+        }
+      ]
+    },
+    {
+      "name": "道路结构及安全设施",
+      "items": [
+        {
+          "name": "桥梁",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "A3C31CA2-D995-4DCC-AF22-6DC5650651EA"
+        },
+        {
+          "name": "涵洞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "AC52C841-0A1F-40D0-A613-91E4BF5CFFF4"
+        },
+        {
+          "name": "公、铁路交口",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "848A5460-3979-4947-B831-791A699A25EA"
+        },
+        {
+          "name": "施工路段",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "6326FE86-C08C-43BB-BA86-337F38146C10"
+        },
+        {
+          "name": "路面凸出部分",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "3ED7AFA6-94A2-4BE6-9710-0C9FFD5E3088"
+        },
+        {
+          "name": "路面凹坑",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "48A9ECF7-2FF1-4FDF-8D6C-F63010752C6E"
+        },
+        {
+          "name": "漫水桥",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "AFF89834-B4F1-433B-9ABE-38598C50B961"
+        },
+        {
+          "name": "路面积水",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "A61A3685-5A1E-4978-851F-0FC7A7148FEF"
+        },
+        {
+          "name": "雨水口",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "71BA54FF-6983-479C-B1B7-190DAF4D0F2F"
+        },
+        {
+          "name": "消火栓井",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "969D19E3-2F0F-4E01-B137-6BEA9EF21913"
+        },
+        {
+          "name": "隧道",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "245A1A80-9CEE-40B9-9880-5F2A68998053"
+        },
+        {
+          "name": "坠落符号",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "23F3B327-8DAC-4AAD-A0AB-C881D605E70F"
+        },
+        {
+          "name": "信号灯",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "B15E607A-5A63-40e0-84C7-7D58A12EA3F9"
+        },
+        {
+          "name": "人行横道灯",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "6B24A984-E36A-4E1A-9263-238BE4B082A6"
+        },
+        {
+          "name": "黄闪灯",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "8452CEB9-7649-4234-8F0C-6EB46F2079BA"
+        },
+        {
+          "name": "计时牌",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F29C892D-6CB6-4F0E-B9BB-4018158D1331"
+        },
+        {
+          "name": "安全岛",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "64A18B1A-8F89-4901-B477-93D8F5B6EF4C"
+        },
+        {
+          "name": "禁令标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "08C617E3-FD5B-4368-9535-B44E3ADDDFB7"
+        },
+        {
+          "name": "警告标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "157B77AB-06DE-45B5-B068-8503410F215A"
+        },
+        {
+          "name": "指示标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "BA0C20F0-EF61-4C86-B8FB-C6AC80577032"
+        },
+        {
+          "name": "指路标志",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "9EAD80AD-63F7-4F6A-9613-F502315F053F"
+        },
+        {
+          "name": "安全镜",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "BA916D95-8788-4E42-955F-29DDBCF49211"
+        },
+        {
+          "name": "汽车停靠站",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "18398959-93F5-4048-9A46-3D9517202A13"
+        },
+        {
+          "name": "岗亭",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "B43BC67B-F395-424a-9BE5-B9537E76954E"
+        },
+        {
+          "name": "高速收费口",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "20F1473F-60FC-4730-A099-284FC0B28EDD"
+        },
+        {
+          "name": "坡度指示箭头",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "B9CA486E-B9A1-4705-ADA8-5A8C4301EC69"
+        },
+        {
+          "name": "下坡道指示箭头",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "B9CA486E-B9A1-4705-ADA8-5A8C4301EC70"
+        }
+      ]
+    },
+    {
+      "name": "交通现象",
+      "items": [
+        {
+          "name": "接触点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C4F6D6B6-D464-4fe3-818A-D69E2B8F3096"
+        },
+        {
+          "name": "发现点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "14F2488D-A78A-495F-A0E1-60E7352F4E76"
+        },
+        {
+          "name": "感到危险点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "29E753A9-3C50-493B-ACDB-B8F76DAD07FE"
+        },
+        {
+          "name": "采取措施点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "0DEDFD7A-3885-46A8-B380-7C68BBAED755"
+        },
+        {
+          "name": "最后停车点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "166266E0-1B04-4815-8493-595036D2BC59"
+        },
+        {
+          "name": "交叉冲突点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "048202A5-A2A9-423D-BEE4-981A64748165"
+        },
+        {
+          "name": "合流冲突点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "7EEE7CE5-4F76-4D66-8A8D-796FED292077"
+        },
+        {
+          "name": "分流冲突点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "7A937A8A-A77A-4AA6-912C-451DF8899909"
+        },
+        {
+          "name": "轻微事故",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "04CC02ED-3590-453F-8E51-6E93541F25FE"
+        },
+        {
+          "name": "一般事故",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "7EB129FD-185A-41D3-AD00-714A8DDB9970"
+        },
+        {
+          "name": "重大事故",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "14E7209D-190D-4C83-9B4D-4009C2C41DC9"
+        },
+        {
+          "name": "特大事故",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "0BE1EF38-8311-4A94-BA3E-5782206DC2F6"
+        },
+        {
+          "name": "机动车行驶轨迹",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F8C5BC36-4CA5-47D5-A1FB-E90C59625201"
+        },
+        {
+          "name": "摩托车行驶轨迹",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "42D0034E-547F-4386-B940-B85BE3841D12"
+        },
+        {
+          "name": "自行车行驶轨迹",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C17C1894-3A1D-41C7-A76C-A84051B3B977"
+        },
+        {
+          "name": "行人运动轨迹",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F001CBE1-B5C8-4A3B-B993-3FB31BC2399B"
+        },
+        {
+          "name": "其他非机动车行驶轨迹",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F41B7CA5-FB88-4315-814C-575D1A842790"
+        },
+        {
+          "name": "机动车倒车轨迹",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "DAD77B56-71FB-4980-9DB9-626E9D20E9F9"
+        },
+        {
+          "name": "尾撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "8314ACC0-01E6-429B-A143-BB4425A2C4CD"
+        },
+        {
+          "name": "会车刮擦",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "103D2E00-A71E-4F48-BD99-37BCCC38D685"
+        },
+        {
+          "name": "超车刮车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "0E8E83D5-1F32-4F10-BE14-351DC0827D81"
+        },
+        {
+          "name": "正面相撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "703136A7-D635-4299-8E8F-2DA1BF7CC93C"
+        },
+        {
+          "name": "视线",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C9C44B69-2CA9-47AF-94B2-254E809D76AC"
+        },
+        {
+          "name": "与倒车相撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "75C94FDD-E76D-49BA-8FE6-C4B85915C92A"
+        },
+        {
+          "name": "逆向转弯相撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "24125351-C8C5-458D-A56B-53498A6DF8E9"
+        },
+        {
+          "name": "同向转弯相撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "00FE63AC-AE13-4480-9468-D71445ECFEE2"
+        },
+        {
+          "name": "迎头相撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "7BED5860-E4F5-4CE2-9077-19FF7A871324"
+        },
+        {
+          "name": "侧面相撞",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "0B0FDB47-2DF0-46E0-A6B3-08FC24938C87"
+        },
+        {
+          "name": "碾压",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "A05AAF52-6A26-49F4-940B-AA7D43317429"
+        },
+        {
+          "name": "机械故障",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "BCFAC80D-220B-40B8-BA38-404B618B0928"
+        },
+        {
+          "name": "爆炸",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "F12B5752-F7EB-45DD-B4B7-389E3526AA96"
+        },
+        {
+          "name": "失控",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "C6D5E261-85F6-45ED-8370-078A74B755F5"
+        },
+        {
+          "name": "翻车坠落",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "1DFE383A-5BD3-4545-831D-58D531AD5EAC"
+        }
+      ]
+    },
+    {
+      "name": "手绘道路元素",
+      "items": [
+        {
+          "name": "剖面图机动车",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "9B16C3CD-2B52-4EF9-86B2-0AA8D1F7EA0E"
+        },
+        {
+          "name": "剖面图水坑",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "43FD82EE-E28A-461D-AF74-5B6A4FD1A2F7"
+        },
+        {
+          "name": "驱动点",
+          "notification": "AddTufuNotification",
+          "flag": 0,
+          "uuid": "2D18F042-EF3C-4A06-929D-0670A77FB569"
+        }
+      ]
+    }
+  ]
+}
