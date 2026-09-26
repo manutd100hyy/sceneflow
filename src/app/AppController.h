@@ -32,11 +32,15 @@ class AppController : public QObject {
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY updated)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY updated)
     Q_PROPERTY(QString zoomText READ zoomText NOTIFY updated)
+    Q_PROPERTY(double paperWidthM READ paperWidthM WRITE setPaperWidthM NOTIFY updated)
+    Q_PROPERTY(double paperHeightM READ paperHeightM WRITE setPaperHeightM NOTIFY updated)
+    Q_PROPERTY(bool gridVisible READ gridVisible WRITE setGridVisible NOTIFY updated)
+    Q_PROPERTY(int objectCount READ objectCount NOTIFY updated)
     Q_PROPERTY(QString hint READ hint NOTIFY updated)
     Q_PROPERTY(QVariantMap selection READ selection NOTIFY selectionChanged)
     Q_PROPERTY(QVariantList objects READ objects NOTIFY updated)
-    Q_PROPERTY(QVariantList templates READ templates NOTIFY updated)
-    Q_PROPERTY(QVariantList groups READ groups NOTIFY updated)
+    Q_PROPERTY(QVariantList templates READ templates CONSTANT)
+    Q_PROPERTY(QVariantList groups READ groups CONSTANT)
     Q_PROPERTY(QVariantList cases READ cases NOTIFY updated)
     Q_PROPERTY(bool showCases READ showCases WRITE setShowCases NOTIFY updated)
     Q_PROPERTY(int laneCount READ laneCount WRITE setLaneCount NOTIFY updated)
@@ -72,6 +76,13 @@ public:
     bool canUndo() const;
     bool canRedo() const;
     QString zoomText() const;
+    double paperWidthM() const;
+    void setPaperWidthM(double metres);
+    double paperHeightM() const;
+    void setPaperHeightM(double metres);
+    bool gridVisible() const;
+    void setGridVisible(bool on);
+    int objectCount() const;
     QString hint() const;
     QVariantMap selection() const;
     QVariantList objects() const;
@@ -113,7 +124,10 @@ public:
     Q_INVOKABLE bool deleteCase(const QString &id);
     Q_INVOKABLE bool duplicateCase(const QString &id);
     Q_INVOKABLE void placeTemplate(const QString &id);
-    Q_INVOKABLE void activateLibrary(const QString &name, const QString &notification, int flag);
+    Q_INVOKABLE void activateLibrary(const QString &name, const QString &notification, int flag, const QString &uuid);
+    Q_INVOKABLE QVariantList searchLibrary(const QString &query, int groupIndex) const;
+    Q_INVOKABLE void openSymbolLibrary();
+    Q_INVOKABLE void closeSymbolLibrary();
     Q_INVOKABLE void undo();
     Q_INVOKABLE void redo();
     Q_INVOKABLE void removeSelection();
@@ -137,6 +151,9 @@ public:
     Q_INVOKABLE QString proportionalize();
     Q_INVOKABLE QString scaleToMeasures();
     Q_INVOKABLE void fit();
+    Q_INVOKABLE void zoomIn();
+    Q_INVOKABLE void zoomOut();
+    Q_INVOKABLE void setDimensionStyle(int style);
     Q_INVOKABLE int rebuildIndex();
     Q_INVOKABLE void addTextAt(double x, double y, const QString &text);
     Q_INVOKABLE void setOpacity(double opacity);
@@ -148,6 +165,10 @@ signals:
     void screenChanged();
     void selectionChanged();
     void textRequested(double x, double y);
+    void symbolLibraryRequested();
+    void symbolLibraryClosed();
+    void createDialogRequested();
+    void dismissPopups();
 
 private:
     void enterScreen(const QString &name);

@@ -31,7 +31,7 @@ HEADERS += \
     src/forms/FormLayout.h \
     src/export/PdfExporter.h
 
-RESOURCES += qml/qml.qrc
+RESOURCES += qml/qml.qrc assets/menuicons/menuicons.qrc
 
 android {
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android

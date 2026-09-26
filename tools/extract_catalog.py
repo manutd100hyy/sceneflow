@@ -602,6 +602,23 @@ def main():
     symbols = extract_symbols(db)
     templates = extract_templates(os.path.join(RES, "Templates.plist"))
     menu = extract_menu(db["menu"], templates)
+    ebike = next((s for s in symbols if s.get("name") == "电动自行车"), None)
+    if ebike:
+        for group in menu["groups"]:
+            if group.get("name") != "交通事故元素":
+                continue
+            names = [it.get("name") for it in group["items"]]
+            if "电动自行车" in names:
+                break
+            item = {
+                "name": "电动自行车",
+                "notification": "AddTufuNotification",
+                "flag": 0,
+                "uuid": ebike.get("uuid") or "",
+            }
+            insert_at = names.index("电瓶车") + 1 if "电瓶车" in names else len(group["items"])
+            group["items"].insert(insert_at, item)
+            break
     dropdowns = extract_dropdowns(db)
     forms = extract_forms(dropdowns)
     with open(os.path.join(OUT, "symbols.json"), "w", encoding="utf-8") as f:

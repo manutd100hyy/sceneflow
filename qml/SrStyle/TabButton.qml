@@ -24,15 +24,13 @@ T.TabButton {
     }
 
     background: Rectangle {
-        implicitHeight: 42
-        color: control.checked ? "#e7f4f1" : (control.down ? "#f4f7f6" : "transparent")
+        implicitHeight: 46
+        color: "white"
         Rectangle {
-            visible: control.checked
-            height: 3
-            radius: 1.5
-            width: Math.max(24, parent.width - 20)
-            anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width * 0.65
+            height: control.checked ? 3 : 0
             color: "#117b70"
         }
     }

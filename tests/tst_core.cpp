@@ -4,11 +4,13 @@
 #include "model/Catalog.h"
 #include "model/Geometry.h"
 #include "model/SceneDocument.h"
+#include "render/ScenePainter.h"
 
 #include <QDir>
 #include <QFile>
 #include <QImage>
 #include <QJsonDocument>
+#include <QLineF>
 #include <QPainter>
 #include <QTemporaryDir>
 #include <QtTest>
@@ -28,6 +30,8 @@ private slots:
     void vectorPdfHeader();
     void filletRightAngle();
     void proportionalizeRightAngle();
+    void libraryMenuResolvesSymbols();
+    void viewScaleMatchesRulersAndPdf();
 };
 
 void TstCore::offsetHorizontal()
@@ -320,6 +324,234 @@ void TstCore::filletRightAngle()
         }
     }
     QVERIFY(nearArc);
+}
+
+static QStringList libraryNames(const QVariantList &rows)
+{
+    QStringList names;
+    for (int i = 0; i < rows.size(); ++i)
+        names << rows.at(i).toMap().value(QStringLiteral("name")).toString();
+    return names;
+}
+
+static QVariantMap findMenuItem(const QVariantList &groups, const QString &name)
+{
+    for (int g = 0; g < groups.size(); ++g) {
+        const QVariantList items = groups.at(g).toMap().value(QStringLiteral("items")).toList();
+        for (int i = 0; i < items.size(); ++i) {
+            const QVariantMap row = items.at(i).toMap();
+            if (row.value(QStringLiteral("name")).toString() == name)
+                return row;
+        }
+    }
+    return QVariantMap();
+}
+
+void TstCore::libraryMenuResolvesSymbols()
+{
+    Catalog catalog;
+    QString error;
+    const QString dataDir = QString::fromUtf8(SR_DATA_DIR);
+    QVERIFY2(catalog.load(dataDir, &error), qPrintable(error));
+
+    const QVariantList groups = catalog.libraryGroups();
+    QVERIFY(!groups.isEmpty());
+    QCOMPARE(groups.at(0).toMap().value(QStringLiteral("name")).toString(), QStringLiteral("常用"));
+
+    QStringList accident;
+    int symbolItems = 0;
+    for (int g = 0; g < groups.size(); ++g) {
+        const QVariantMap group = groups.at(g).toMap();
+        const QVariantList items = group.value(QStringLiteral("items")).toList();
+        if (group.value(QStringLiteral("name")).toString() == QStringLiteral("交通事故元素")) {
+            for (int i = 0; i < items.size(); ++i)
+                accident << items.at(i).toMap().value(QStringLiteral("name")).toString();
+        }
+        for (int i = 0; i < items.size(); ++i) {
+            const QVariantMap row = items.at(i).toMap();
+            if (row.value(QStringLiteral("notification")).toString() != QLatin1String("AddTufuNotification"))
+                continue;
+            const QString resolved = catalog.resolveSymbolName(
+                    row.value(QStringLiteral("uuid")).toString(),
+                    row.value(QStringLiteral("name")).toString());
+            QVERIFY2(!resolved.isEmpty(), qPrintable(group.value(QStringLiteral("name")).toString()
+                                                      + QLatin1Char('/') + row.value(QStringLiteral("name")).toString()));
+            ++symbolItems;
+        }
+    }
+    QVERIFY(symbolItems > 100);
+    QVERIFY(accident.contains(QStringLiteral("小轿车")));
+    QVERIFY(accident.contains(QStringLiteral("客车")));
+    QVERIFY(accident.contains(QStringLiteral("货车")));
+    QVERIFY(accident.contains(QStringLiteral("电动自行车")));
+
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("高速服务区")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("高速服务区")),
+             QStringLiteral("高速公路服务区"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("公、铁路交口")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("公、铁路交口")),
+             QStringLiteral("道路与铁路平交口"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("机动车行驶轨迹")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("机动车行驶轨迹")),
+             QStringLiteral("机动车行驶方向"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("摩托车行驶轨迹")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("摩托车行驶轨迹")),
+             QStringLiteral("非机动车行驶方向"));
+    QCOMPARE(catalog.resolveSymbolName(findMenuItem(groups, QStringLiteral("行人运动轨迹")).value(QStringLiteral("uuid")).toString(),
+                                       QStringLiteral("行人运动轨迹")),
+             QStringLiteral("人员行驶方向"));
+
+    const QStringList common = libraryNames(catalog.searchLibrary(QString(), 0));
+    QVERIFY(common.contains(QStringLiteral("小轿车")));
+    QVERIFY(common.contains(QStringLiteral("客车")));
+    QVERIFY(common.contains(QStringLiteral("货车")));
+    QVERIFY(!common.contains(QStringLiteral("桥梁")));
+
+    const QStringList truckAlias = libraryNames(catalog.searchLibrary(QStringLiteral("小货车"), 0));
+    QVERIFY(truckAlias.contains(QStringLiteral("货车")));
+    QVERIFY(libraryNames(catalog.searchLibrary(QStringLiteral("轻型货车"), 0)).contains(QStringLiteral("货车")));
+    const QStringList van = libraryNames(catalog.searchLibrary(QStringLiteral("面包车"), 0));
+    QVERIFY(van.contains(QStringLiteral("客车")));
+    QVERIFY(van.contains(QStringLiteral("小轿车")));
+    QVERIFY(libraryNames(catalog.searchLibrary(QStringLiteral("桥梁"), 0)).contains(QStringLiteral("桥梁")));
+    QCOMPARE(libraryNames(catalog.searchLibrary(QStringLiteral("小轿车"), 2)).count(QStringLiteral("小轿车")), 1);
+
+    const QVariantMap car = findMenuItem(groups, QStringLiteral("小轿车"));
+    QVERIFY(car.value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_car.png")));
+    QVERIFY(findMenuItem(groups, QStringLiteral("客车")).value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_bus.png")));
+    QVERIFY(findMenuItem(groups, QStringLiteral("货车")).value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_truck.png")));
+    QVERIFY(findMenuItem(groups, QStringLiteral("人体")).value(QStringLiteral("icon")).toString().contains(QStringLiteral("symbol_person.png")));
+    const QString iconFile = QDir(dataDir).absoluteFilePath(QStringLiteral("../assets/menuicons/Symbols/symbol_car.png"));
+    QVERIFY2(QFile::exists(iconFile), qPrintable(iconFile));
+}
+
+void TstCore::viewScaleMatchesRulersAndPdf()
+{
+    QVERIFY(qAbs(basePixelsPerMeter() - 20.0) < 1e-9);
+    QVERIFY(qAbs(niceMeterStep(20, 60) - 2.0) < 1e-9);
+    QVERIFY(qAbs(niceMeterStep(7.8, 60) - 10.0) < 1e-6);
+    QVERIFY(qAbs(niceMeterStep(100, 60) - 0.5) < 1e-9);
+    QVERIFY(qAbs(niceMeterStep(2, 60) - 20.0) < 1e-6);
+
+    SceneDocument doc;
+    QCOMPARE(doc.paperWidthM(), 100.0);
+    QCOMPARE(doc.paperHeightM(), 70.0);
+    QVERIFY(qAbs(doc.zoom() - 1.0) < 1e-9);
+    QVERIFY(qAbs(doc.pixelsPerMeter() - 20.0) < 1e-9);
+
+    const double zooms[3] = {0.5, 1.0, 2.0};
+    const double spans[2] = {4.5, 3.5};
+    for (int i = 0; i < 3; ++i) {
+        doc.setZoom(zooms[i]);
+        const double ppm = doc.pixelsPerMeter();
+        QVERIFY(qAbs(ppm - 20.0 * zooms[i]) < 1e-9);
+        doc.setPanX(120);
+        doc.setPanY(340);
+        for (int s = 0; s < 2; ++s) {
+            const QPointF a(doc.panX(), doc.panY());
+            const QPointF b(doc.panX() + spans[s] * ppm, doc.panY());
+            QVERIFY2(qAbs(QLineF(a, b).length() - spans[s] * ppm) < 0.02,
+                     qPrintable(QString::number(QLineF(a, b).length())));
+        }
+    }
+    doc.setZoom(0.25);
+    QVERIFY(doc.pixelsPerMeter() + 1e-9 >= 5.0);
+    doc.setZoom(0.2);
+    QVERIFY(doc.pixelsPerMeter() < 5.0);
+
+    QJsonObject legacy;
+    legacy.insert(QStringLiteral("zoom"), 8);
+    SceneDocument oldDoc;
+    oldDoc.fromJson(legacy);
+    QVERIFY2(qAbs(oldDoc.zoom() - 0.4) < 1e-9, qPrintable(QString::number(oldDoc.zoom())));
+    QVERIFY(qAbs(oldDoc.pixelsPerMeter() - 8.0) < 1e-6);
+    SceneDocument round;
+    round.setZoom(0.8);
+    round.setPaperWidthM(80);
+    round.setPaperHeightM(50);
+    SceneDocument loaded;
+    loaded.fromJson(round.toJson());
+    QVERIFY(qAbs(loaded.zoom() - 0.8) < 1e-9);
+    QCOMPARE(loaded.paperWidthM(), 80.0);
+    QCOMPARE(loaded.paperHeightM(), 50.0);
+
+    Catalog catalog;
+    QString error;
+    QVERIFY2(catalog.load(QStringLiteral("/workspace/data"), &error), qPrintable(error));
+    SceneDocument scene;
+    scene.setZoom(1);
+    const QString carId = scene.placeSymbol(catalog, QStringLiteral("小轿车"), QPointF(0, 0));
+    QVERIFY(!carId.isEmpty());
+    const QRectF car = scene.object(carId)->worldBounds(&catalog);
+    QVERIFY2(car.width() > 3.4 && car.width() < 4.0, qPrintable(QString::number(car.width())));
+    QVERIFY(qAbs(car.width() * scene.pixelsPerMeter() - car.width() * 20.0) < 0.05);
+
+    scene.addRoad(QVector<QPointF>() << QPointF(0, 0) << QPointF(20, 0), 2, 3.5);
+    double ymin = 1e9;
+    double ymax = -1e9;
+    const QVector<SceneObject> objects = scene.objects();
+    for (int i = 0; i < objects.size(); ++i) {
+        if (objects.at(i).type != QLatin1String("roadline") || objects.at(i).points.isEmpty())
+            continue;
+        ymin = qMin(ymin, objects.at(i).points.at(0).y());
+        ymax = qMax(ymax, objects.at(i).points.at(0).y());
+    }
+    const double lane = (ymax - ymin) / 2.0;
+    QVERIFY2(qAbs(lane - 3.5) < 0.05, qPrintable(QString::number(lane)));
+    QVERIFY(qAbs(lane * scene.pixelsPerMeter() - 3.5 * 20.0) < 1.0);
+
+    QCOMPARE(pdfMillimetresPerMetre(200), 5.0);
+    QVERIFY(qAbs(3.5 * pdfMillimetresPerMetre(200) - 17.5) < 1e-9);
+    QVERIFY(qAbs(4.5 * pdfMillimetresPerMetre(200) - 22.5) < 1e-9);
+    QVERIFY(qAbs(car.width() * pdfMillimetresPerMetre(200) - car.width() * 5.0) < 1e-6);
+    const double pxPerM = pdfMillimetresPerMetre(200) * (144.0 / 25.4);
+    QImage image(800, 240, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::white);
+    {
+        QPainter painter(&image);
+        painter.translate(30, 120);
+        painter.scale(pxPerM, -pxPerM);
+        const QPointF laneEnd = painter.transform().map(QPointF(3.5, 0));
+        const QPointF carEnd = painter.transform().map(QPointF(car.width(), 0));
+        const QPointF origin = painter.transform().map(QPointF(0, 0));
+        QVERIFY(qAbs(QLineF(origin, laneEnd).length() - 3.5 * pxPerM) < 0.75);
+        QVERIFY(qAbs(QLineF(origin, carEnd).length() - car.width() * pxPerM) < 0.75);
+    }
+
+    scene.setSelection(carId);
+    QVERIFY(scene.setProperty(QStringLiteral("rotation"), 90, &catalog));
+    QImage rotated(400, 300, QImage::Format_ARGB32_Premultiplied);
+    rotated.fill(Qt::white);
+    {
+        QPainter painter(&rotated);
+        painter.translate(200, 150);
+        painter.scale(scene.pixelsPerMeter(), -scene.pixelsPerMeter());
+        PaintOptions options;
+        options.grid = false;
+        paintScene(painter, scene, catalog, options);
+    }
+    const QColor far = rotated.pixelColor(360, 150);
+    QVERIFY2(far.red() > 240 && far.green() > 240 && far.blue() > 240, qPrintable(far.name()));
+    int ink = 0;
+    int samples = 0;
+    for (int y = 0; y < rotated.height(); y += 3) {
+        for (int x = 0; x < rotated.width(); x += 3) {
+            const QColor px = rotated.pixelColor(x, y);
+            ++samples;
+            if (px.red() < 80 && px.green() < 90 && px.blue() < 100)
+                ++ink;
+        }
+    }
+    QVERIFY2(ink > 10 && ink * 8 < samples, qPrintable(QStringLiteral("ink %1 / %2").arg(ink).arg(samples)));
+
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    SceneSheet sheet;
+    sheet.paper = QStringLiteral("A3");
+    sheet.landscape = true;
+    sheet.scaleDenom = 200;
+    QVERIFY2(exportScenePdf(dir.path() + QStringLiteral("/scale.pdf"), scene, catalog, 0, sheet, &error),
+             qPrintable(error));
 }
 
 QTEST_MAIN(TstCore)

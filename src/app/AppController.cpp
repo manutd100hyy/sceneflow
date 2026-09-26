@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QEventLoop>
 #include <QFile>
 #include <QFileInfo>
@@ -115,7 +116,30 @@ int AppController::activeTab() const { return m_tab; }
 int AppController::tool() const { return m_tool; }
 bool AppController::canUndo() const { return m_document.canUndo(); }
 bool AppController::canRedo() const { return m_document.canRedo(); }
-QString AppController::zoomText() const { return QString::number(int(m_document.zoom() / 8.0 * 100)) + QStringLiteral("%"); }
+QString AppController::zoomText() const { return QString::number(qRound(m_document.zoom() * 100)) + QStringLiteral("%"); }
+double AppController::paperWidthM() const { return m_document.paperWidthM(); }
+double AppController::paperHeightM() const { return m_document.paperHeightM(); }
+bool AppController::gridVisible() const { return m_document.gridVisible(); }
+int AppController::objectCount() const { return m_document.objectCount(); }
+
+void AppController::setPaperWidthM(double metres)
+{
+    m_document.setPaperWidthM(metres);
+    if (m_canvas && m_canvas->width() > 20)
+        m_document.fitView(m_canvas->width(), m_canvas->height(), &m_catalog);
+}
+
+void AppController::setPaperHeightM(double metres)
+{
+    m_document.setPaperHeightM(metres);
+    if (m_canvas && m_canvas->width() > 20)
+        m_document.fitView(m_canvas->width(), m_canvas->height(), &m_catalog);
+}
+
+void AppController::setGridVisible(bool on)
+{
+    m_document.setGridVisible(on);
+}
 QString AppController::hint() const { return m_hint; }
 QVariantMap AppController::selection() const { return m_document.selectionSummary(&m_catalog); }
 QVariantList AppController::objects() const { return m_document.objectList(); }
@@ -143,8 +167,8 @@ QString AppController::statusText() const
     if (m_id.isEmpty())
         return QStringLiteral("未打开案例");
     return (m_dirty ? QStringLiteral("未保存") : QStringLiteral("已保存"))
-            + QStringLiteral(" · 网格 ") + QString::number(m_document.gridMetres())
-            + QStringLiteral(" m · ") + (m_document.snapEnabled() ? QStringLiteral("吸附开") : QStringLiteral("吸附关"));
+            + QStringLiteral("  ·  ") + QString::number(m_document.objectCount())
+            + QStringLiteral(" 个对象");
 }
 
 QString AppController::aerialStatus() const
@@ -747,7 +771,7 @@ void AppController::placeTemplate(const QString &id)
     emit updated();
 }
 
-void AppController::activateLibrary(const QString &name, const QString &notification, int flag)
+void AppController::activateLibrary(const QString &name, const QString &notification, int flag, const QString &uuid)
 {
     if (!m_canvas)
         return;
@@ -770,12 +794,28 @@ void AppController::activateLibrary(const QString &name, const QString &notifica
         return;
     }
     if (notification == QLatin1String("onUsePencilDrawingDimension")) { setTool(6); return; }
-    if (m_catalog.symbol(name)) {
-        m_canvas->setSymbolName(name);
+    const QString resolved = m_catalog.resolveSymbolName(uuid, name);
+    if (!resolved.isEmpty()) {
+        m_canvas->setSymbolName(resolved);
         setTool(3);
         m_message = QStringLiteral("单击画布放置 ") + name;
         emit updated();
     }
+}
+
+QVariantList AppController::searchLibrary(const QString &query, int groupIndex) const
+{
+    return m_catalog.searchLibrary(query, groupIndex);
+}
+
+void AppController::openSymbolLibrary()
+{
+    emit symbolLibraryRequested();
+}
+
+void AppController::closeSymbolLibrary()
+{
+    emit symbolLibraryClosed();
 }
 
 void AppController::undo() { m_document.undo(); }
@@ -999,6 +1039,28 @@ QString AppController::scaleToMeasures()
     return text;
 }
 
+void AppController::zoomIn()
+{
+    if (m_canvas)
+        m_canvas->zoomBy(1.15);
+    else
+        m_document.setZoom(m_document.zoom() * 1.15);
+}
+
+void AppController::zoomOut()
+{
+    if (m_canvas)
+        m_canvas->zoomBy(1.0 / 1.15);
+    else
+        m_document.setZoom(m_document.zoom() / 1.15);
+}
+
+void AppController::setDimensionStyle(int style)
+{
+    if (m_canvas)
+        m_canvas->setDimensionStyle(style);
+}
+
 void AppController::fit()
 {
     double w = 900;
@@ -1062,21 +1124,32 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
             window->update();
         QCoreApplication::processEvents();
     };
+    const auto pump = [window](int ms) {
+        QElapsedTimer timer;
+        timer.start();
+        while (timer.elapsed() < ms)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 40);
+        if (window)
+            window->update();
+        QCoreApplication::processEvents();
+    };
     const auto grab = [&](const QString &name) {
         settle();
         if (!window)
             return;
-        QImage image = window->grabWindow();
-        if (image.isNull() && window->contentItem()) {
+        QImage image;
+        if (window->contentItem()) {
             const QSharedPointer<QQuickItemGrabResult> shot = window->contentItem()->grabToImage();
             if (shot) {
                 QEventLoop loop;
                 QObject::connect(shot.data(), &QQuickItemGrabResult::ready, &loop, &QEventLoop::quit);
-                QTimer::singleShot(1500, &loop, &QEventLoop::quit);
+                QTimer::singleShot(2000, &loop, &QEventLoop::quit);
                 loop.exec();
                 image = shot->image();
             }
         }
+        if (image.isNull())
+            image = window->grabWindow();
         const QString path = QDir(directory).filePath(name + QStringLiteral(".png"));
         if (image.isNull() || !image.save(path))
             qWarning("截图失败: %s (%dx%d)", qPrintable(name), image.width(), image.height());
@@ -1091,13 +1164,37 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
     emit updated();
     resizeTo(1360, 860);
     grab(QStringLiteral("01-home-desktop"));
+    emit createDialogRequested();
+    pump(400);
+    grab(QStringLiteral("01b-new-case"));
+    emit dismissPopups();
+    pump(200);
+    enterScreen(QStringLiteral("workspace"));
+    enterScreen(QStringLiteral("home"));
+    emit updated();
     resizeTo(390, 844);
     grab(QStringLiteral("02-home-phone"));
     openSample();
     resizeTo(1360, 860);
     m_tab = 1;
     emit updated();
+    pump(200);
+    fit();
+    emit updated();
+    openSymbolLibrary();
+    pump(300);
     grab(QStringLiteral("03-editor-desktop"));
+    grab(QStringLiteral("11-library-desktop"));
+    m_document.setZoom(1);
+    if (m_canvas && m_canvas->width() > 20) {
+        m_document.setPanX(m_canvas->width() * 0.62);
+        m_document.setPanY(m_canvas->height() * 0.58);
+        m_document.clampPan(m_canvas->width(), m_canvas->height());
+    }
+    emit updated();
+    pump(250);
+    grab(QStringLiteral("13-scale-check"));
+    fit();
     m_tab = 0;
     emit updated();
     grab(QStringLiteral("04-case-info"));
@@ -1109,11 +1206,20 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
     grab(QStringLiteral("06-forms"));
     m_tab = 1;
     resizeTo(1024, 768);
+    pump(150);
+    fit();
     emit updated();
     grab(QStringLiteral("07-editor-tablet"));
     resizeTo(390, 844);
+    pump(200);
+    fit();
     emit updated();
     grab(QStringLiteral("08-editor-phone"));
+    openSymbolLibrary();
+    pump(800);
+    grab(QStringLiteral("12-library-phone"));
+    closeSymbolLibrary();
+    pump(300);
     m_showCases = true;
     refreshCases(QString());
     emit updated();

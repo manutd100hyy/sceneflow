@@ -69,6 +69,11 @@ public:
     bool load(const QString &dataDir, QString *error = 0);
     QString dataDir() const;
     const SymbolDef *symbol(const QString &name) const;
+    const SymbolDef *symbolByUuid(const QString &uuid) const;
+    // 菜单名和符号名不一致时先按 uuid 命中，再退回名称。
+    QString resolveSymbolName(const QString &uuid, const QString &name) const;
+    // query 为空时只返回该分组；否则跨全部分组，并识别货车/客车别名。
+    QVariantList searchLibrary(const QString &query, int groupIndex) const;
     const TemplateDef *templateById(const QString &id) const;
     QString templateIdForName(const QString &name) const;
     QRectF naturalBounds(const QString &name, int styleIndex) const;
@@ -86,6 +91,7 @@ private:
     QString m_dir;
     QVector<SymbolDef> m_symbols;
     QHash<QString, int> m_symIndex;
+    QHash<QString, int> m_uuidIndex;
     QVector<TemplateDef> m_templates;
     QHash<QString, int> m_tplIndex;
     QVariantList m_tplList;

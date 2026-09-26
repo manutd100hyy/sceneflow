@@ -6,6 +6,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
+#include <QStringList>
 
 namespace sr {
 
@@ -88,6 +90,82 @@ QRectF TemplateDef::bounds() const
     return r;
 }
 
+static QString iconUrl(const QString &relative)
+{
+    if (relative.isEmpty())
+        return QString();
+    QString path = relative;
+    path.replace(QLatin1String(" "), QLatin1String("%20"));
+    return QStringLiteral("qrc:/menuicons/") + path;
+}
+
+static void loadIconMap(const QString &dataDir, QHash<QString, QString> *items, QHash<QString, QString> *templates)
+{
+    QFile file(dataDir + QStringLiteral("/icon_map.json"));
+    if (!file.open(QIODevice::ReadOnly))
+        return;
+    const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
+    const QJsonObject itemObj = root.value(QStringLiteral("items")).toObject();
+    for (QJsonObject::const_iterator it = itemObj.constBegin(); it != itemObj.constEnd(); ++it)
+        items->insert(it.key(), iconUrl(it.value().toString()));
+    const QJsonObject tplObj = root.value(QStringLiteral("templates")).toObject();
+    for (QJsonObject::const_iterator it = tplObj.constBegin(); it != tplObj.constEnd(); ++it)
+        templates->insert(it.key(), iconUrl(it.value().toString()));
+}
+
+static void prependCommonGroup(QVariantList *groups)
+{
+    const QStringList names = QStringList()
+            << QStringLiteral("小轿车")
+            << QStringLiteral("客车")
+            << QStringLiteral("货车")
+            << QStringLiteral("二轮摩托车")
+            << QStringLiteral("电瓶车")
+            << QStringLiteral("电动自行车")
+            << QStringLiteral("自行车")
+            << QStringLiteral("三轮车")
+            << QStringLiteral("人体");
+    QVariantList items;
+    for (int i = 0; i < names.size(); ++i) {
+        const QString want = names.at(i);
+        bool found = false;
+        for (int g = 0; g < groups->size() && !found; ++g) {
+            const QVariantList src = groups->at(g).toMap().value(QStringLiteral("items")).toList();
+            for (int k = 0; k < src.size(); ++k) {
+                const QVariantMap row = src.at(k).toMap();
+                if (row.value(QStringLiteral("name")).toString() == want) {
+                    items.append(row);
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+    QVariantMap group;
+    group.insert(QStringLiteral("name"), QStringLiteral("常用"));
+    group.insert(QStringLiteral("items"), items);
+    groups->prepend(group);
+}
+
+static bool aliasMatches(const QString &symbolName, const QString &query)
+{
+    const QString pairs[] = {
+        QStringLiteral("小货车"), QStringLiteral("货车"),
+        QStringLiteral("轻型货车"), QStringLiteral("货车"),
+        QStringLiteral("面包车"), QStringLiteral("客车"),
+        QStringLiteral("面包车"), QStringLiteral("小轿车"),
+    };
+    for (int i = 0; i < 4; ++i) {
+        const QString alias = pairs[i * 2];
+        const QString symbol = pairs[i * 2 + 1];
+        if (symbolName != symbol)
+            continue;
+        if (alias.contains(query) || query.contains(alias))
+            return true;
+    }
+    return false;
+}
+
 Catalog::Catalog()
 {
 }
@@ -97,6 +175,7 @@ bool Catalog::load(const QString &dataDir, QString *error)
     m_dir = dataDir;
     m_symbols.clear();
     m_symIndex.clear();
+    m_uuidIndex.clear();
     m_templates.clear();
     m_tplIndex.clear();
     m_tplList.clear();
@@ -138,6 +217,9 @@ bool Catalog::load(const QString &dataDir, QString *error)
         }
         if (def.name.isEmpty() || def.styles.isEmpty())
             continue;
+        const QString uuidKey = def.uuid.toUpper();
+        if (!uuidKey.isEmpty() && !m_uuidIndex.contains(uuidKey))
+            m_uuidIndex.insert(uuidKey, m_symbols.size());
         m_symIndex.insert(def.name, m_symbols.size());
         m_symbols.append(def);
     }
@@ -184,6 +266,10 @@ bool Catalog::load(const QString &dataDir, QString *error)
         m_templates.append(def);
     }
 
+    QHash<QString, QString> itemIcons;
+    QHash<QString, QString> templateIcons;
+    loadIconMap(dataDir, &itemIcons, &templateIcons);
+
     QFile menuFile(dataDir + QStringLiteral("/menu.json"));
     if (menuFile.open(QIODevice::ReadOnly)) {
         const QJsonObject menu = QJsonDocument::fromJson(menuFile.readAll()).object();
@@ -191,8 +277,10 @@ bool Catalog::load(const QString &dataDir, QString *error)
         for (int i = 0; i < templates.size(); ++i) {
             const QJsonObject o = templates.at(i).toObject();
             QVariantMap row;
-            row.insert(QStringLiteral("name"), o.value(QStringLiteral("name")).toString());
+            const QString templateName = o.value(QStringLiteral("name")).toString();
+            row.insert(QStringLiteral("name"), templateName);
             row.insert(QStringLiteral("id"), o.value(QStringLiteral("id")).toString());
+            row.insert(QStringLiteral("icon"), templateIcons.value(templateName));
             m_tplList.append(row);
         }
         const QJsonArray groups = menu.value(QStringLiteral("groups")).toArray();
@@ -200,19 +288,24 @@ bool Catalog::load(const QString &dataDir, QString *error)
             const QJsonObject g = groups.at(i).toObject();
             QVariantList items;
             const QJsonArray arr = g.value(QStringLiteral("items")).toArray();
+            const QString groupName = g.value(QStringLiteral("name")).toString();
             for (int k = 0; k < arr.size(); ++k) {
                 const QJsonObject it = arr.at(k).toObject();
+                const QString itemName = it.value(QStringLiteral("name")).toString();
                 QVariantMap row;
-                row.insert(QStringLiteral("name"), it.value(QStringLiteral("name")).toString());
+                row.insert(QStringLiteral("name"), itemName);
                 row.insert(QStringLiteral("notification"), it.value(QStringLiteral("notification")).toString());
                 row.insert(QStringLiteral("flag"), it.value(QStringLiteral("flag")).toInt());
+                row.insert(QStringLiteral("uuid"), it.value(QStringLiteral("uuid")).toString());
+                row.insert(QStringLiteral("icon"), itemIcons.value(groupName + QLatin1Char('/') + itemName));
                 items.append(row);
             }
             QVariantMap group;
-            group.insert(QStringLiteral("name"), g.value(QStringLiteral("name")).toString());
+            group.insert(QStringLiteral("name"), groupName);
             group.insert(QStringLiteral("items"), items);
             m_groups.append(group);
         }
+        prependCommonGroup(&m_groups);
     }
     if (m_symbols.isEmpty()) {
         if (error)
@@ -236,6 +329,55 @@ const SymbolDef *Catalog::symbol(const QString &name) const
     if (it == m_symIndex.constEnd())
         return 0;
     return &m_symbols.at(it.value());
+}
+
+const SymbolDef *Catalog::symbolByUuid(const QString &uuid) const
+{
+    if (uuid.isEmpty())
+        return 0;
+    const QHash<QString, int>::const_iterator it = m_uuidIndex.constFind(uuid.toUpper());
+    if (it == m_uuidIndex.constEnd())
+        return 0;
+    return &m_symbols.at(it.value());
+}
+
+QString Catalog::resolveSymbolName(const QString &uuid, const QString &name) const
+{
+    if (const SymbolDef *byId = symbolByUuid(uuid))
+        return byId->name;
+    if (symbol(name))
+        return name;
+    return QString();
+}
+
+QVariantList Catalog::searchLibrary(const QString &query, int groupIndex) const
+{
+    const QString q = query.trimmed();
+    QVariantList out;
+    QSet<QString> seen;
+    for (int g = 0; g < m_groups.size(); ++g) {
+        if (q.isEmpty() && g != groupIndex)
+            continue;
+        const QVariantList items = m_groups.at(g).toMap().value(QStringLiteral("items")).toList();
+        for (int i = 0; i < items.size(); ++i) {
+            const QVariantMap row = items.at(i).toMap();
+            const QString name = row.value(QStringLiteral("name")).toString();
+            const QString uuid = row.value(QStringLiteral("uuid")).toString();
+            const QString notification = row.value(QStringLiteral("notification")).toString();
+            const QString resolved = resolveSymbolName(uuid, name);
+            bool hit = q.isEmpty() || name.contains(q) || (!resolved.isEmpty() && resolved != name && resolved.contains(q));
+            if (!hit)
+                hit = aliasMatches(name, q) || (!resolved.isEmpty() && aliasMatches(resolved, q));
+            if (!hit)
+                continue;
+            const QString key = name + QLatin1Char('\n') + uuid + QLatin1Char('\n') + notification;
+            if (seen.contains(key))
+                continue;
+            seen.insert(key);
+            out.append(row);
+        }
+    }
+    return out;
 }
 
 const TemplateDef *Catalog::templateById(const QString &id) const
