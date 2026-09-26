@@ -1,0 +1,66 @@
+{
+  "symbols": 145,
+  "templates": 45,
+  "templateLines": 384,
+  "templateMarks": 256,
+  "menuTemplates": 44,
+  "menuGroups": [
+    [
+      "手绘道路",
+      13
+    ],
+    [
+      "地面物体图形符号",
+      19
+    ],
+    [
+      "交通事故元素",
+      28
+    ],
+    [
+      "痕迹散落物",
+      11
+    ],
+    [
+      "道路结构及安全设施",
+      27
+    ],
+    [
+      "交通现象",
+      33
+    ],
+    [
+      "手绘道路元素",
+      3
+    ]
+  ],
+  "dropdowns": {
+    "survey": 57,
+    "inquiry": 9,
+    "interrogation": 9,
+    "certificate": 9
+  },
+  "forms": [
+    [
+      "survey",
+      5,
+      280
+    ],
+    [
+      "inquiry",
+      2,
+      62
+    ],
+    [
+      "interrogation",
+      2,
+      62
+    ],
+    [
+      "certificate",
+      1,
+      47
+    ]
+  ],
+  "emptyTemplates": []
+}
