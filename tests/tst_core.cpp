@@ -7,11 +7,15 @@
 #include "render/ScenePainter.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
+#include <QFileInfo>
 #include <QImage>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QLineF>
 #include <QPainter>
+#include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QtTest>
 
@@ -32,6 +36,7 @@ private slots:
     void proportionalizeRightAngle();
     void libraryMenuResolvesSymbols();
     void viewScaleMatchesRulersAndPdf();
+    void qrcPathsAreAsciiAndExist();
 };
 
 void TstCore::offsetHorizontal()
@@ -552,6 +557,79 @@ void TstCore::viewScaleMatchesRulersAndPdf()
     sheet.scaleDenom = 200;
     QVERIFY2(exportScenePdf(dir.path() + QStringLiteral("/scale.pdf"), scene, catalog, 0, sheet, &error),
              qPrintable(error));
+}
+
+static bool isSafeResourcePath(const QString &path)
+{
+    if (path.isEmpty() || path.startsWith(QLatin1Char('/')) || path.contains(QLatin1String("..")))
+        return false;
+    for (int i = 0; i < path.size(); ++i) {
+        const ushort c = path.at(i).unicode();
+        const bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                || c == '.' || c == '_' || c == '-' || c == '/';
+        if (!ok)
+            return false;
+    }
+    return true;
+}
+
+void TstCore::qrcPathsAreAsciiAndExist()
+{
+    const QString root = QDir(QString::fromUtf8(SR_DATA_DIR)).absoluteFilePath(QStringLiteral(".."));
+    QDirIterator qrcs(root, QStringList() << QStringLiteral("*.qrc"), QDir::Files, QDirIterator::Subdirectories);
+    int entries = 0;
+    int qrcFiles = 0;
+    while (qrcs.hasNext()) {
+        const QString qrcPath = qrcs.next();
+        if (qrcPath.contains(QLatin1String("/.git/")))
+            continue;
+        QFile file(qrcPath);
+        QVERIFY2(file.open(QIODevice::ReadOnly), qPrintable(qrcPath));
+        const QString text = QString::fromUtf8(file.readAll());
+        QRegularExpression re(QStringLiteral("<file>([^<]+)</file>"));
+        QRegularExpressionMatchIterator matches = re.globalMatch(text);
+        const QDir base(QFileInfo(qrcPath).absolutePath());
+        int here = 0;
+        while (matches.hasNext()) {
+            const QString rel = matches.next().captured(1).trimmed();
+            ++here;
+            QVERIFY2(isSafeResourcePath(rel), qPrintable(qrcPath + QStringLiteral(": ") + rel));
+            const QString absolute = base.filePath(rel);
+            QVERIFY2(QFileInfo(absolute).isFile(), qPrintable(absolute));
+        }
+        QVERIFY2(here > 0, qPrintable(qrcPath));
+        entries += here;
+        ++qrcFiles;
+    }
+    QVERIFY(qrcFiles >= 2);
+    QVERIFY(entries > 100);
+
+    QDirIterator assets(root + QStringLiteral("/assets"), QDir::Files, QDirIterator::Subdirectories);
+    int assetFiles = 0;
+    while (assets.hasNext()) {
+        const QString absolute = assets.next();
+        const QString rel = QDir(root + QStringLiteral("/assets")).relativeFilePath(absolute);
+        ++assetFiles;
+        QVERIFY2(isSafeResourcePath(rel), qPrintable(rel));
+    }
+    QVERIFY(assetFiles > 100);
+
+    QFile iconMap(root + QStringLiteral("/data/icon_map.json"));
+    QVERIFY(iconMap.open(QIODevice::ReadOnly));
+    const QJsonObject iconRoot = QJsonDocument::fromJson(iconMap.readAll()).object();
+    const QStringList sections = QStringList() << QStringLiteral("items") << QStringLiteral("templates");
+    const QDir icons(root + QStringLiteral("/assets/menuicons"));
+    int mapped = 0;
+    for (int s = 0; s < sections.size(); ++s) {
+        const QJsonObject obj = iconRoot.value(sections.at(s)).toObject();
+        for (QJsonObject::const_iterator it = obj.constBegin(); it != obj.constEnd(); ++it) {
+            const QString rel = it.value().toString();
+            ++mapped;
+            QVERIFY2(isSafeResourcePath(rel), qPrintable(it.key() + QStringLiteral(" -> ") + rel));
+            QVERIFY2(QFileInfo(icons.filePath(rel)).isFile(), qPrintable(rel));
+        }
+    }
+    QVERIFY(mapped > 100);
 }
 
 QTEST_MAIN(TstCore)

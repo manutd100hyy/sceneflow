@@ -1,4 +1,4 @@
-import QtQuick 2.14
+﻿import QtQuick 2.14
 import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.14
 
@@ -59,21 +59,21 @@ Item {
     }
     function annotationTools() {
         var common = [
-            { name: "距离标注", tool: 6, style: 0, glyph: "dimension" },
-            { name: "文字", tool: 7, style: -1, glyph: "text" },
-            { name: "痕迹", tool: 4, style: -1, glyph: "trace" },
-            { name: "散落物", tool: 5, style: -1, glyph: "debris" }
+            ({ name: "距离标注", tool: 6, style: 0, glyph: "dimension" }),
+            ({ name: "文字", tool: 7, style: -1, glyph: "text" }),
+            ({ name: "痕迹", tool: 4, style: -1, glyph: "trace" }),
+            ({ name: "散落物", tool: 5, style: -1, glyph: "debris" })
         ]
         var tools = [
-            { name: "直角标注", tool: 6, style: 1, glyph: "dimension" },
-            { name: "皮尺", tool: 6, style: 3, glyph: "dimension" },
-            { name: "人行横道", tool: 8, style: -1, glyph: "crosswalk" },
-            { name: "导向箭头", tool: 9, style: -1, glyph: "guide" },
-            { name: "环岛", tool: 10, style: -1, glyph: "circle" },
-            { name: "橡皮", tool: 11, style: -1, glyph: "eraser" }
+            ({ name: "直角标注", tool: 6, style: 1, glyph: "dimension" }),
+            ({ name: "皮尺", tool: 6, style: 3, glyph: "dimension" }),
+            ({ name: "人行横道", tool: 8, style: -1, glyph: "crosswalk" }),
+            ({ name: "导向箭头", tool: 9, style: -1, glyph: "guide" }),
+            ({ name: "环岛", tool: 10, style: -1, glyph: "circle" }),
+            ({ name: "橡皮", tool: 11, style: -1, glyph: "eraser" })
         ]
         if (app.edition === "aerial" || app.hasAerial)
-            tools.push({ name: "航拍标定", tool: 12, style: -1, glyph: "calibrate" })
+            tools.push(({ name: "航拍标定", tool: 12, style: -1, glyph: "calibrate" }))
         return cat() === "工具" ? tools : common
     }
     function reload() {
