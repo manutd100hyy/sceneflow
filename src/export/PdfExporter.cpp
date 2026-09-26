@@ -28,6 +28,13 @@ static QPageSize::PageSizeId pageId(const QString &paper)
     return paper == QLatin1String("A3") ? QPageSize::A3 : QPageSize::A4;
 }
 
+double pdfMillimetresPerMetre(int scaleDenom)
+{
+    if (scaleDenom <= 0)
+        return 0;
+    return 1000.0 / double(scaleDenom);
+}
+
 static void prepare(QPdfWriter &writer, const QString &paper, bool landscape)
 {
     writer.setPageSize(QPageSize(pageId(paper)));
@@ -68,7 +75,7 @@ bool exportScenePdf(const QString &path, const SceneDocument &document, const Ca
         const double mmPerM = pxPerM / pxPerMm;
         denom = qMax(1, int(qRound(1000.0 / qMax(0.01, mmPerM))));
     } else {
-        const double mmPerM = 1000.0 / denom;
+        const double mmPerM = pdfMillimetresPerMetre(denom);
         pxPerM = mmPerM * pxPerMm;
     }
     const QPointF center = bounds.center();

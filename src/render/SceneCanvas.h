@@ -44,6 +44,7 @@ public:
 
     Q_INVOKABLE void finishDraft();
     Q_INVOKABLE void cancelDraft();
+    Q_INVOKABLE void zoomBy(double factor);
 
 signals:
     void toolChanged();
@@ -70,6 +71,9 @@ private:
     void zoomAt(const QPointF &screen, double factor);
     void finishAt(const QVector<QPointF> &pts);
     QRectF selectionBox() const;
+    QRectF paperScreenRect() const;
+    void drawRulers(QPainter *painter) const;
+    void drawPaperChrome(QPainter *painter) const;
 
     SceneDocument *m_doc;
     const Catalog *m_catalog;
@@ -93,6 +97,9 @@ private:
     SceneObject m_editBefore;
     bool m_haveEditBefore;
     double m_pinchDist;
+    QPointF m_pinchCenter;
+    bool m_pinchActive;
+    bool m_panMoved;
     QImage m_aerial;
     QString m_aerialPath;
 

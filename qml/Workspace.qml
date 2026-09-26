@@ -40,7 +40,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: phone ? 92 : 60
+            Layout.preferredHeight: phone ? 96 : 68
             color: "white"
             ColumnLayout {
                 anchors.fill: parent
@@ -53,7 +53,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: 6
-                    Button { text: phone ? "首页" : "‹ 案例首页"; flat: true; onClicked: app.goHome() }
+                    Button { text: phone ? "‹ 首页" : "‹ 案例首页"; flat: true; onClicked: app.goHome() }
                     Label {
                         visible: !phone
                         text: app.caseName
@@ -64,10 +64,10 @@ Item {
                         Layout.fillWidth: true
                     }
                     Item { visible: phone; Layout.fillWidth: true }
-                    Button { text: "撤销"; visible: !phone; enabled: app.canUndo; onClicked: app.undo() }
-                    Button { text: "重做"; visible: !phone; enabled: app.canRedo; onClicked: app.redo() }
+                    Button { text: "撤销"; visible: work.width > 700; enabled: app.canUndo; onClicked: app.undo() }
+                    Button { text: "重做"; visible: work.width > 700; enabled: app.canRedo; onClicked: app.redo() }
                     Button { text: "保存"; highlighted: app.dirty; onClicked: app.save() }
-                    Button { text: "导出"; visible: !phone; onClicked: exportMenu.open() }
+                    Button { text: "导出"; visible: work.width > 600; onClicked: exportMenu.open() }
                     Button { text: "···"; visible: phone; onClicked: exportMenu.open() }
                 }
                 Label {
@@ -90,10 +90,10 @@ Item {
             Layout.fillWidth: true
             currentIndex: app.activeTab
             onCurrentIndexChanged: if (app.activeTab !== currentIndex) app.activeTab = currentIndex
-            TabButton { text: phone ? "信息" : "案例信息" }
-            TabButton { text: phone ? "绘图" : "现场绘图" }
-            TabButton { text: phone ? "照片" : "照片与记录" }
-            TabButton { text: phone ? "文书" : "文书输出" }
+            TabButton { text: "案例信息" }
+            TabButton { text: "现场绘图" }
+            TabButton { text: "照片与记录" }
+            TabButton { text: "文书输出" }
         }
 
         StackLayout {
@@ -105,19 +105,6 @@ Item {
             EditorPane { }
             PhotosPane { }
             FormsPane { }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 28
-            color: "#eef3f2"
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 10
-                anchors.rightMargin: 10
-                Label { text: app.statusText; color: "#5c6e78"; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
-                Label { text: app.zoomText; color: "#203542"; font.pixelSize: 12 }
-            }
         }
     }
 
@@ -189,7 +176,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         // 手机绘图页底栏 58 + 状态栏 28，提示要落在底栏上方。
-        anchors.bottomMargin: (phone && app.activeTab === 1) ? 100 : 40
+        anchors.bottomMargin: app.activeTab === 1 ? (phone ? 120 : 64) : 24
         color: "white"
         padding: 10
         leftPadding: 14

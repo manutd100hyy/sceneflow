@@ -116,7 +116,30 @@ int AppController::activeTab() const { return m_tab; }
 int AppController::tool() const { return m_tool; }
 bool AppController::canUndo() const { return m_document.canUndo(); }
 bool AppController::canRedo() const { return m_document.canRedo(); }
-QString AppController::zoomText() const { return QString::number(int(m_document.zoom() / 8.0 * 100)) + QStringLiteral("%"); }
+QString AppController::zoomText() const { return QString::number(qRound(m_document.zoom() * 100)) + QStringLiteral("%"); }
+double AppController::paperWidthM() const { return m_document.paperWidthM(); }
+double AppController::paperHeightM() const { return m_document.paperHeightM(); }
+bool AppController::gridVisible() const { return m_document.gridVisible(); }
+int AppController::objectCount() const { return m_document.objectCount(); }
+
+void AppController::setPaperWidthM(double metres)
+{
+    m_document.setPaperWidthM(metres);
+    if (m_canvas && m_canvas->width() > 20)
+        m_document.fitView(m_canvas->width(), m_canvas->height(), &m_catalog);
+}
+
+void AppController::setPaperHeightM(double metres)
+{
+    m_document.setPaperHeightM(metres);
+    if (m_canvas && m_canvas->width() > 20)
+        m_document.fitView(m_canvas->width(), m_canvas->height(), &m_catalog);
+}
+
+void AppController::setGridVisible(bool on)
+{
+    m_document.setGridVisible(on);
+}
 QString AppController::hint() const { return m_hint; }
 QVariantMap AppController::selection() const { return m_document.selectionSummary(&m_catalog); }
 QVariantList AppController::objects() const { return m_document.objectList(); }
@@ -144,8 +167,8 @@ QString AppController::statusText() const
     if (m_id.isEmpty())
         return QStringLiteral("未打开案例");
     return (m_dirty ? QStringLiteral("未保存") : QStringLiteral("已保存"))
-            + QStringLiteral(" · 网格 ") + QString::number(m_document.gridMetres())
-            + QStringLiteral(" m · ") + (m_document.snapEnabled() ? QStringLiteral("吸附开") : QStringLiteral("吸附关"));
+            + QStringLiteral("  ·  ") + QString::number(m_document.objectCount())
+            + QStringLiteral(" 个对象");
 }
 
 QString AppController::aerialStatus() const
@@ -1016,6 +1039,28 @@ QString AppController::scaleToMeasures()
     return text;
 }
 
+void AppController::zoomIn()
+{
+    if (m_canvas)
+        m_canvas->zoomBy(1.15);
+    else
+        m_document.setZoom(m_document.zoom() * 1.15);
+}
+
+void AppController::zoomOut()
+{
+    if (m_canvas)
+        m_canvas->zoomBy(1.0 / 1.15);
+    else
+        m_document.setZoom(m_document.zoom() / 1.15);
+}
+
+void AppController::setDimensionStyle(int style)
+{
+    if (m_canvas)
+        m_canvas->setDimensionStyle(style);
+}
+
 void AppController::fit()
 {
     double w = 900;
@@ -1119,16 +1164,37 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
     emit updated();
     resizeTo(1360, 860);
     grab(QStringLiteral("01-home-desktop"));
+    emit createDialogRequested();
+    pump(400);
+    grab(QStringLiteral("01b-new-case"));
+    emit dismissPopups();
+    pump(200);
+    enterScreen(QStringLiteral("workspace"));
+    enterScreen(QStringLiteral("home"));
+    emit updated();
     resizeTo(390, 844);
     grab(QStringLiteral("02-home-phone"));
     openSample();
     resizeTo(1360, 860);
     m_tab = 1;
     emit updated();
+    pump(200);
+    fit();
+    emit updated();
     openSymbolLibrary();
-    pump(400);
+    pump(300);
     grab(QStringLiteral("03-editor-desktop"));
     grab(QStringLiteral("11-library-desktop"));
+    m_document.setZoom(1);
+    if (m_canvas && m_canvas->width() > 20) {
+        m_document.setPanX(m_canvas->width() * 0.62);
+        m_document.setPanY(m_canvas->height() * 0.58);
+        m_document.clampPan(m_canvas->width(), m_canvas->height());
+    }
+    emit updated();
+    pump(250);
+    grab(QStringLiteral("13-scale-check"));
+    fit();
     m_tab = 0;
     emit updated();
     grab(QStringLiteral("04-case-info"));
@@ -1140,9 +1206,13 @@ void AppController::runCapture(QQuickWindow *window, const QString &directory)
     grab(QStringLiteral("06-forms"));
     m_tab = 1;
     resizeTo(1024, 768);
+    pump(150);
+    fit();
     emit updated();
     grab(QStringLiteral("07-editor-tablet"));
     resizeTo(390, 844);
+    pump(200);
+    fit();
     emit updated();
     grab(QStringLiteral("08-editor-phone"));
     openSymbolLibrary();

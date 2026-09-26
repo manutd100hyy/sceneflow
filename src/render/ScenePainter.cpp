@@ -8,6 +8,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QtMath>
+#include <cmath>
 
 namespace sr {
 
@@ -31,7 +32,11 @@ QColor lineColor(const QString &name)
 
 double devicePerMetre(const QPainter &painter)
 {
-    return qMax(0.01, qAbs(painter.transform().m11()));
+    // m11 is 0 after a 90° rotation, so measure both axes of the transform.
+    const QTransform t = painter.transform();
+    const double sx = std::hypot(t.m11(), t.m12());
+    const double sy = std::hypot(t.m21(), t.m22());
+    return qMax(0.01, qMax(sx, sy));
 }
 
 double stroke(const QPainter &painter, double worldWidth)
@@ -525,24 +530,47 @@ void drawText(QPainter &painter, const SceneObject &obj)
 
 void drawGrid(QPainter &painter, const SceneDocument &document)
 {
-    const QRectF view = painter.transform().inverted().mapRect(QRectF(painter.viewport()));
-    if (!view.isValid())
+    if (!document.gridVisible())
         return;
-    const double step = document.gridMetres();
-    if (step <= 0)
+    const QRectF paper = document.paperWorldRect();
+    if (!paper.isValid())
         return;
-    const QPen pen(QColor(180, 198, 196, 140), stroke(painter, 0.01));
-    painter.setPen(pen);
-    const double x0 = qFloor(view.left() / step) * step;
-    const double x1 = view.right();
-    const double y0 = qFloor(view.top() / step) * step;
-    const double y1 = view.bottom();
+    const double ppm = devicePerMetre(painter);
+    painter.save();
+    painter.setClipRect(paper, Qt::IntersectClip);
+    QPen major(QColor(217, 226, 221));
+    major.setCosmetic(true);
+    major.setWidthF(1);
+    painter.setPen(major);
+    const double x0 = paper.left();
+    const double x1 = paper.right();
+    const double y0 = paper.top();
+    const double y1 = paper.bottom();
     int guard = 0;
-    for (double x = x0; x <= x1 && guard < 400; x += step, ++guard)
+    for (double x = x0; x <= x1 + 0.01 && guard < 2000; x += 5.0, ++guard)
         painter.drawLine(QPointF(x, y0), QPointF(x, y1));
     guard = 0;
-    for (double y = y0; y <= y1 && guard < 400; y += step, ++guard)
+    for (double y = y0; y <= y1 + 0.01 && guard < 2000; y += 5.0, ++guard)
         painter.drawLine(QPointF(x0, y), QPointF(x1, y));
+    if (ppm >= 5.0) {
+        QPen minor(QColor(238, 242, 240));
+        minor.setCosmetic(true);
+        minor.setWidthF(1);
+        painter.setPen(minor);
+        guard = 0;
+        for (double x = x0; x <= x1 + 0.01 && guard < 4000; x += 1.0, ++guard) {
+            if (qRound(x - x0) % 5 == 0)
+                continue;
+            painter.drawLine(QPointF(x, y0), QPointF(x, y1));
+        }
+        guard = 0;
+        for (double y = y0; y <= y1 + 0.01 && guard < 4000; y += 1.0, ++guard) {
+            if (qRound(y - y0) % 5 == 0)
+                continue;
+            painter.drawLine(QPointF(x0, y), QPointF(x1, y));
+        }
+    }
+    painter.restore();
 }
 
 void drawAerial(QPainter &painter, const SceneDocument &document, const QImage &image)

@@ -5,8 +5,30 @@
 #include <QLineF>
 #include <QtMath>
 #include <algorithm>
+#include <cmath>
 
 namespace sr {
+
+double niceMeterStep(double pixelsPerMeter, double desiredPixels)
+{
+    if (pixelsPerMeter <= 0 || desiredPixels <= 0)
+        return 1;
+    const double desiredMeters = desiredPixels / pixelsPerMeter;
+    if (!(desiredMeters > 0) || !std::isfinite(desiredMeters))
+        return 1;
+    const double pow10 = std::pow(10.0, std::floor(std::log10(desiredMeters)));
+    if (!std::isfinite(pow10) || pow10 <= 0)
+        return 1;
+    const double norm = desiredMeters / pow10;
+    double step = 10;
+    if (norm < 1.5)
+        step = 1;
+    else if (norm < 3.5)
+        step = 2;
+    else if (norm < 7.5)
+        step = 5;
+    return step * pow10;
+}
 
 namespace {
 
@@ -194,9 +216,12 @@ void AerialLayer::fromJson(const QJsonObject &obj)
 
 SceneDocument::SceneDocument(QObject *parent)
     : QObject(parent)
-    , m_grid(5)
+    , m_grid(1)
     , m_snap(true)
-    , m_zoom(8)
+    , m_gridVisible(true)
+    , m_zoom(1)
+    , m_paperWidthM(100)
+    , m_paperHeightM(70)
     , m_panX(400)
     , m_panY(300)
     , m_dragGroups(true)
@@ -217,7 +242,11 @@ bool SceneDocument::canRedo() const { return !m_redo.isEmpty(); }
 QString SceneDocument::selectionId() const { return m_selection; }
 double SceneDocument::gridMetres() const { return m_grid; }
 bool SceneDocument::snapEnabled() const { return m_snap; }
+bool SceneDocument::gridVisible() const { return m_gridVisible; }
 double SceneDocument::zoom() const { return m_zoom; }
+double SceneDocument::pixelsPerMeter() const { return basePixelsPerMeter() * m_zoom; }
+double SceneDocument::paperWidthM() const { return m_paperWidthM; }
+double SceneDocument::paperHeightM() const { return m_paperHeightM; }
 double SceneDocument::panX() const { return m_panX; }
 double SceneDocument::panY() const { return m_panY; }
 bool SceneDocument::dragGroups() const { return m_dragGroups; }
@@ -236,10 +265,35 @@ void SceneDocument::setSnapEnabled(bool on)
     emit viewChanged();
 }
 
+void SceneDocument::setGridVisible(bool on)
+{
+    if (m_gridVisible == on)
+        return;
+    m_gridVisible = on;
+    emit viewChanged();
+}
+
 void SceneDocument::setZoom(double z)
 {
-    m_zoom = qBound(0.2, z, 400.0);
+    m_zoom = qBound(0.15, z, 4.0);
     emit viewChanged();
+}
+
+void SceneDocument::setPaperWidthM(double metres)
+{
+    m_paperWidthM = qBound(10.0, metres, 1000.0);
+    emit viewChanged();
+}
+
+void SceneDocument::setPaperHeightM(double metres)
+{
+    m_paperHeightM = qBound(10.0, metres, 1000.0);
+    emit viewChanged();
+}
+
+QRectF SceneDocument::paperWorldRect() const
+{
+    return QRectF(-m_paperWidthM * 0.5, -m_paperHeightM * 0.5, m_paperWidthM, m_paperHeightM);
 }
 
 void SceneDocument::setPanX(double v)
@@ -599,7 +653,7 @@ QPointF SceneDocument::snapPoint(const QPointF &world, const Catalog *catalog, c
         return world;
     QPointF best = snapToGrid(world, m_grid);
     double bestD = dist(world, best);
-    const double limit = qMax(0.35, 12.0 / qMax(0.2, m_zoom));
+    const double limit = qBound(0.05, 12.0 / qMax(1.0, pixelsPerMeter()), 1.5);
     for (int i = 0; i < m_objects.size(); ++i) {
         const SceneObject &obj = m_objects.at(i);
         if (obj.id == ignoreId)
@@ -1383,23 +1437,45 @@ bool SceneDocument::setProperty(const QString &key, const QVariant &value, const
 
 void SceneDocument::fitView(double viewWidth, double viewHeight, const Catalog *catalog)
 {
-    const QRectF box = contentBounds(catalog);
-    if (!box.isValid() || box.width() < 0.1 || box.height() < 0.1) {
-        m_zoom = 8;
-        m_panX = viewWidth * 0.5;
-        m_panY = viewHeight * 0.55;
-        emit viewChanged();
-        return;
-    }
-    const double margin = 72;
-    const double availW = qMax(120.0, viewWidth - margin * 2);
-    const double availH = qMax(120.0, viewHeight - margin * 2);
-    const double zx = availW / qMax(0.5, box.width());
-    const double zy = availH / qMax(0.5, box.height());
-    m_zoom = qBound(1.5, qMin(zx, zy), 24.0);
-    const QPointF c = box.center();
-    m_panX = viewWidth * 0.5 - c.x() * m_zoom;
-    m_panY = viewHeight * 0.5 + c.y() * m_zoom;
+    Q_UNUSED(catalog);
+    const double rulerL = 30.0;
+    const double rulerT = 22.0;
+    const double availW = qMax(40.0, viewWidth - rulerL - 12.0);
+    const double availH = qMax(40.0, viewHeight - rulerT - 12.0);
+    const double zx = availW / qMax(1.0, m_paperWidthM * basePixelsPerMeter());
+    const double zy = availH / qMax(1.0, m_paperHeightM * basePixelsPerMeter());
+    m_zoom = qBound(0.15, qMin(zx, zy), 4.0);
+    const double ppm = pixelsPerMeter();
+    const double pw = m_paperWidthM * ppm;
+    const double ph = m_paperHeightM * ppm;
+    const double left = rulerL + (availW - pw) * 0.5;
+    const double top = rulerT + (availH - ph) * 0.5;
+    const double paperLeft = -m_paperWidthM * 0.5;
+    const double paperNorth = m_paperHeightM * 0.5;
+    m_panX = left - paperLeft * ppm;
+    m_panY = top + paperNorth * ppm;
+    emit viewChanged();
+}
+
+void SceneDocument::clampPan(double viewWidth, double viewHeight)
+{
+    const double ppm = pixelsPerMeter();
+    const double pw = m_paperWidthM * ppm;
+    const double ph = m_paperHeightM * ppm;
+    const double rulerL = 30.0;
+    const double rulerT = 22.0;
+    const double paperLeft = -m_paperWidthM * 0.5;
+    const double paperNorth = m_paperHeightM * 0.5;
+    double left = m_panX + paperLeft * ppm;
+    double top = m_panY - paperNorth * ppm;
+    const double minX = qMin(rulerL, viewWidth - pw);
+    const double maxX = qMax(rulerL, viewWidth - pw);
+    const double minY = qMin(rulerT, viewHeight - ph);
+    const double maxY = qMax(rulerT, viewHeight - ph);
+    left = qBound(minX, left, maxX);
+    top = qBound(minY, top, maxY);
+    m_panX = left - paperLeft * ppm;
+    m_panY = top + paperNorth * ppm;
     emit viewChanged();
 }
 
@@ -1408,7 +1484,11 @@ QJsonObject SceneDocument::toJson() const
     QJsonObject o;
     o.insert(QStringLiteral("grid"), m_grid);
     o.insert(QStringLiteral("snap"), m_snap);
+    o.insert(QStringLiteral("gridVisible"), m_gridVisible);
     o.insert(QStringLiteral("zoom"), m_zoom);
+    o.insert(QStringLiteral("zoomUnit"), QStringLiteral("factor"));
+    o.insert(QStringLiteral("paperWidthM"), m_paperWidthM);
+    o.insert(QStringLiteral("paperHeightM"), m_paperHeightM);
     o.insert(QStringLiteral("panX"), m_panX);
     o.insert(QStringLiteral("panY"), m_panY);
     o.insert(QStringLiteral("aerial"), m_aerial.toJson());
@@ -1424,9 +1504,17 @@ void SceneDocument::fromJson(const QJsonObject &obj)
     m_objects.clear();
     m_selection.clear();
     clearHistory();
-    m_grid = obj.value(QStringLiteral("grid")).toDouble(5);
+    m_grid = obj.value(QStringLiteral("grid")).toDouble(1);
     m_snap = obj.value(QStringLiteral("snap")).toBool(true);
-    m_zoom = obj.value(QStringLiteral("zoom")).toDouble(8);
+    m_gridVisible = obj.value(QStringLiteral("gridVisible")).toBool(true);
+    m_paperWidthM = qBound(10.0, obj.value(QStringLiteral("paperWidthM")).toDouble(100), 1000.0);
+    m_paperHeightM = qBound(10.0, obj.value(QStringLiteral("paperHeightM")).toDouble(70), 1000.0);
+    if (obj.value(QStringLiteral("zoomUnit")).toString() == QLatin1String("factor"))
+        m_zoom = qBound(0.15, obj.value(QStringLiteral("zoom")).toDouble(1), 4.0);
+    else if (obj.contains(QStringLiteral("zoom")))
+        m_zoom = qBound(0.15, obj.value(QStringLiteral("zoom")).toDouble(8) / basePixelsPerMeter(), 4.0);
+    else
+        m_zoom = 1;
     m_panX = obj.value(QStringLiteral("panX")).toDouble(400);
     m_panY = obj.value(QStringLiteral("panY")).toDouble(300);
     m_aerial.fromJson(obj.value(QStringLiteral("aerial")).toObject());

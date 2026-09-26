@@ -11,6 +11,7 @@
 #include <QTouchEvent>
 #include <QWheelEvent>
 #include <QtMath>
+#include <cmath>
 
 namespace sr {
 
@@ -31,6 +32,9 @@ SceneCanvas::SceneCanvas(QQuickItem *parent)
     , m_scaling(false)
     , m_haveEditBefore(false)
     , m_pinchDist(0)
+    , m_pinchCenter()
+    , m_pinchActive(false)
+    , m_panMoved(false)
 {
     setAcceptedMouseButtons(Qt::AllButtons);
     setAcceptHoverEvents(true);
@@ -75,7 +79,7 @@ void SceneCanvas::setTool(int tool)
     m_tool = tool;
     emit toolChanged();
     QString hint = QStringLiteral("选择对象，拖动移动");
-    if (tool == 1) hint = QStringLiteral("拖动画布平移，滚轮或双指缩放");
+    if (tool == 1) hint = QStringLiteral("拖动画布平移。右键、中键或双指也可平移，滚轮缩放");
     else if (tool == 2) hint = QStringLiteral("单击添加道路中线，双击或回车结束");
     else if (tool == 3) hint = QStringLiteral("单击放置图符");
     else if (tool == 4) hint = QStringLiteral("按住拖动绘制痕迹");
@@ -106,7 +110,7 @@ QPointF SceneCanvas::toWorld(const QPointF &screen) const
 {
     if (!m_doc)
         return QPointF();
-    const double z = qMax(0.05, m_doc->zoom());
+    const double z = qMax(0.05, m_doc->pixelsPerMeter());
     return QPointF((screen.x() - m_doc->panX()) / z, (m_doc->panY() - screen.y()) / z);
 }
 
@@ -114,13 +118,13 @@ QPointF SceneCanvas::toScreen(const QPointF &world) const
 {
     if (!m_doc)
         return world;
-    const double z = m_doc->zoom();
+    const double z = m_doc->pixelsPerMeter();
     return QPointF(m_doc->panX() + world.x() * z, m_doc->panY() - world.y() * z);
 }
 
 double SceneCanvas::tolerance() const
 {
-    const double z = m_doc ? qMax(0.2, m_doc->zoom()) : 8;
+    const double z = m_doc ? qMax(1.0, m_doc->pixelsPerMeter()) : basePixelsPerMeter();
     return 10.0 / z;
 }
 
@@ -148,15 +152,31 @@ SceneCanvas::Handle SceneCanvas::hitHandle(const QPointF &screen) const
     return HandleNone;
 }
 
+void SceneCanvas::zoomBy(double factor)
+{
+    zoomAt(QPointF(width() * 0.5, height() * 0.5), factor);
+}
+
 void SceneCanvas::zoomAt(const QPointF &screen, double factor)
 {
     if (!m_doc)
         return;
     const QPointF world = toWorld(screen);
-    const double next = qBound(0.2, m_doc->zoom() * factor, 400.0);
-    m_doc->setZoom(next);
-    m_doc->setPanX(screen.x() - world.x() * next);
-    m_doc->setPanY(screen.y() + world.y() * next);
+    m_doc->setZoom(m_doc->zoom() * factor);
+    const double ppm = m_doc->pixelsPerMeter();
+    m_doc->setPanX(screen.x() - world.x() * ppm);
+    m_doc->setPanY(screen.y() + world.y() * ppm);
+    m_doc->clampPan(width(), height());
+}
+
+QRectF SceneCanvas::paperScreenRect() const
+{
+    if (!m_doc)
+        return QRectF();
+    const QRectF world = m_doc->paperWorldRect();
+    const QPointF topLeft = toScreen(QPointF(world.left(), world.top() + world.height()));
+    const double ppm = m_doc->pixelsPerMeter();
+    return QRectF(topLeft, QSizeF(world.width() * ppm, world.height() * ppm));
 }
 
 void SceneCanvas::reloadAerial()
@@ -220,31 +240,156 @@ void SceneCanvas::finishDraft()
     update();
 }
 
+void SceneCanvas::drawRulers(QPainter *painter) const
+{
+    if (!m_doc)
+        return;
+    const double ppm = m_doc->pixelsPerMeter();
+    if (ppm <= 0)
+        return;
+    const QRectF paper = paperScreenRect();
+    const double rulerW = 30;
+    const double rulerH = 22;
+    const QColor face(245, 247, 246);
+    const QColor edge(220, 227, 224);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(face);
+    painter->drawRect(QRectF(0, 0, width(), rulerH));
+    painter->drawRect(QRectF(0, 0, rulerW, height()));
+    painter->setPen(edge);
+    painter->drawLine(QPointF(rulerW, 0), QPointF(width(), 0));
+    painter->drawLine(QPointF(rulerW, rulerH), QPointF(width(), rulerH));
+    painter->drawLine(QPointF(0, rulerH), QPointF(0, height()));
+    painter->drawLine(QPointF(rulerW, rulerH), QPointF(rulerW, height()));
+
+    const double stepM = niceMeterStep(ppm, 60);
+    if (stepM <= 0)
+        return;
+    const double stepPx = stepM * ppm;
+    QFont font = painter->font();
+    font.setPixelSize(10);
+    font.setFamily(QStringLiteral("WenQuanYi Micro Hei"));
+    painter->setFont(font);
+
+    const auto labelOf = [](double metres) {
+        if (qAbs(metres - qRound(metres)) < 0.05)
+            return QString::number(qRound(metres));
+        return QString::number(metres, 'f', 1);
+    };
+
+    double startMeter = (rulerW - paper.left()) / ppm;
+    double first = std::ceil(startMeter / stepM) * stepM;
+    int count = 0;
+    for (double m = first; count < 1000; m += stepM, ++count) {
+        const double x = paper.left() + m * ppm;
+        if (x < rulerW - stepPx)
+            continue;
+        if (x > width() + stepPx)
+            break;
+        const int idx = qRound(m / stepM);
+        const bool big = idx % 5 == 0;
+        if (big) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(90, 107, 101));
+            painter->drawRect(QRectF(x, rulerH - 10, 1, 10));
+            painter->setPen(QColor(58, 75, 69));
+            painter->drawText(QRectF(x + 3, 1, 48, rulerH - 2), Qt::AlignLeft | Qt::AlignVCenter, labelOf(m));
+        } else if (stepPx >= 8) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(154, 168, 162));
+            painter->drawRect(QRectF(x, rulerH - 5, 1, 5));
+        }
+    }
+
+    const double lo = (paper.bottom() - height()) / ppm;
+    const double hi = (paper.bottom() - rulerH) / ppm;
+    double firstV = std::ceil((qMin(lo, hi) - stepM) / stepM) * stepM;
+    count = 0;
+    for (double m = firstV; count < 1000; m += stepM, ++count) {
+        const double y = paper.bottom() - m * ppm;
+        if (y > height() + stepPx)
+            continue;
+        if (y < rulerH - stepPx)
+            break;
+        if (y < rulerH || y > height())
+            continue;
+        const int idx = qRound(m / stepM);
+        const bool big = idx % 5 == 0;
+        if (big) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(90, 107, 101));
+            painter->drawRect(QRectF(rulerW - 10, y, 10, 1));
+            painter->setPen(QColor(58, 75, 69));
+            painter->save();
+            painter->translate(11, y - 2);
+            painter->rotate(-90);
+            painter->drawText(QRectF(0, 0, 36, 12), Qt::AlignLeft | Qt::AlignVCenter, labelOf(m));
+            painter->restore();
+        } else if (stepPx >= 8) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(154, 168, 162));
+            painter->drawRect(QRectF(rulerW - 5, y, 5, 1));
+        }
+    }
+}
+
+void SceneCanvas::drawPaperChrome(QPainter *painter) const
+{
+    if (!m_doc)
+        return;
+    const QRectF paper = paperScreenRect();
+    if (paper.width() < 8 || paper.height() < 8)
+        return;
+    painter->setPen(QColor(64, 84, 94));
+    QFont font = painter->font();
+    font.setPixelSize(16);
+    font.setFamily(QStringLiteral("WenQuanYi Micro Hei"));
+    painter->setFont(font);
+    const QRectF mark(paper.right() - 42, paper.top() + 10, 30, 40);
+    if (mark.left() > 36 && mark.top() > 24 && mark.bottom() < height())
+        painter->drawText(mark, Qt::AlignHCenter, QStringLiteral("N\n↑"));
+    if (m_doc->objectCount() == 0 && m_aerial.isNull()) {
+        painter->setPen(QColor(135, 147, 153));
+        font.setPixelSize(16);
+        painter->setFont(font);
+        painter->drawText(paper.intersected(QRectF(30, 22, width() - 30, height() - 22)),
+                          Qt::AlignCenter, QStringLiteral("从图符库选择道路或图符，开始绘制\n也可以先补充案例信息"));
+    }
+}
+
 void SceneCanvas::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::Antialiasing, true);
-    painter->fillRect(QRectF(0, 0, width(), height()), QColor(243, 246, 245));
+    painter->fillRect(QRectF(0, 0, width(), height()), QColor(237, 241, 239));
     if (!m_doc || !m_catalog)
         return;
+    const QRectF paper = paperScreenRect();
+    painter->setPen(QPen(QColor(205, 216, 212), 1));
+    painter->setBrush(Qt::white);
+    painter->drawRect(paper);
+
     painter->save();
     painter->translate(m_doc->panX(), m_doc->panY());
-    painter->scale(m_doc->zoom(), -m_doc->zoom());
+    painter->scale(m_doc->pixelsPerMeter(), -m_doc->pixelsPerMeter());
     PaintOptions options;
-    options.grid = true;
+    options.grid = m_doc->gridVisible();
     options.selectedId = m_doc->selectionId();
     options.aerial = m_aerial.isNull() ? 0 : &m_aerial;
     paintScene(*painter, *m_doc, *m_catalog, options);
     if (m_draft.size() >= 1) {
-        painter->setPen(QPen(QColor(17, 123, 112), 1.4 / qMax(0.2, m_doc->zoom()), Qt::DashLine, Qt::RoundCap));
+        const double ppm = qMax(1.0, m_doc->pixelsPerMeter());
+        painter->setPen(QPen(QColor(17, 123, 112), 1.4 / ppm, Qt::DashLine, Qt::RoundCap));
         for (int i = 1; i < m_draft.size(); ++i)
             painter->drawLine(m_draft.at(i - 1), m_draft.at(i));
         if (m_drafting)
             painter->drawLine(m_draft.last(), m_cursor);
         painter->setBrush(QColor(17, 123, 112));
         for (int i = 0; i < m_draft.size(); ++i)
-            painter->drawEllipse(m_draft.at(i), 4.0 / m_doc->zoom(), 4.0 / m_doc->zoom());
+            painter->drawEllipse(m_draft.at(i), 4.0 / ppm, 4.0 / ppm);
     }
     painter->restore();
+    drawPaperChrome(painter);
+    drawRulers(painter);
 
     const QRectF box = selectionBox();
     if (box.isValid()) {
@@ -265,11 +410,14 @@ void SceneCanvas::mousePressEvent(QMouseEvent *event)
         return;
     m_pressScreen = event->localPos();
     m_lastScreen = m_pressScreen;
+    m_panMoved = false;
     const QPointF world = toWorld(m_pressScreen);
     const QPointF snapped = m_doc->snapPoint(world, m_catalog);
     m_pressWorld = world;
     m_cursor = snapped;
-    if (event->button() == Qt::MiddleButton || m_tool == 1) {
+    const bool panButton = event->button() == Qt::MiddleButton || event->button() == Qt::RightButton
+            || (m_tool == 1 && event->button() == Qt::LeftButton);
+    if (panButton) {
         m_panning = true;
         event->accept();
         return;
@@ -359,8 +507,11 @@ void SceneCanvas::mouseMoveEvent(QMouseEvent *event)
     m_cursor = m_doc->snapPoint(world, m_catalog);
     if (m_panning) {
         const QPointF d = screen - m_lastScreen;
+        if (QLineF(m_pressScreen, screen).length() > 4)
+            m_panMoved = true;
         m_doc->setPanX(m_doc->panX() + d.x());
         m_doc->setPanY(m_doc->panY() + d.y());
+        m_doc->clampPan(width(), height());
         m_lastScreen = screen;
         return;
     }
@@ -398,9 +549,11 @@ void SceneCanvas::mouseMoveEvent(QMouseEvent *event)
 
 void SceneCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event);
-    if (m_panning)
+    if (m_panning) {
+        if (event->button() == Qt::RightButton && !m_panMoved)
+            cancelDraft();
         m_panning = false;
+    }
     if (m_dragging) {
         m_doc->endDrag();
         m_dragging = false;
@@ -430,7 +583,7 @@ void SceneCanvas::wheelEvent(QWheelEvent *event)
     const int delta = event->angleDelta().y();
     if (delta == 0)
         return;
-    zoomAt(event->pos(), delta > 0 ? 1.12 : 1.0 / 1.12);
+    zoomAt(event->pos(), delta > 0 ? 1.15 : 1.0 / 1.15);
     event->accept();
 }
 
@@ -463,16 +616,28 @@ void SceneCanvas::touchEvent(QTouchEvent *event)
         const QPointF b = points.at(1).pos();
         const QPointF center = (a + b) * 0.5;
         const double distance = qMax(1.0, QLineF(a, b).length());
-        if (m_pinchDist < 1)
+        if (!m_pinchActive) {
+            m_pinchActive = true;
             m_pinchDist = distance;
-        zoomAt(center, distance / m_pinchDist);
-        m_pinchDist = distance;
+            m_pinchCenter = center;
+        } else if (m_doc) {
+            const double factor = distance / qMax(1.0, m_pinchDist);
+            if (qAbs(factor - 1.0) > 0.002)
+                zoomAt(m_pinchCenter, factor);
+            const QPointF delta = center - m_pinchCenter;
+            m_doc->setPanX(m_doc->panX() + delta.x());
+            m_doc->setPanY(m_doc->panY() + delta.y());
+            m_doc->clampPan(width(), height());
+            m_pinchDist = distance;
+            m_pinchCenter = center;
+        }
         if (points.at(0).state() == Qt::TouchPointReleased || points.at(1).state() == Qt::TouchPointReleased)
-            m_pinchDist = 0;
+            m_pinchActive = false;
         event->accept();
         return;
     }
     m_pinchDist = 0;
+    m_pinchActive = false;
     if (points.isEmpty())
         return;
     const QTouchEvent::TouchPoint point = points.first();

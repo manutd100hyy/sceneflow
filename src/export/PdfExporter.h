@@ -24,6 +24,9 @@ struct SceneSheet {
     SceneSheet();
 };
 
+// 1:denom 时图上每米的毫米数。denom<=0 时返回 0，由导出按内容自适应。
+double pdfMillimetresPerMetre(int scaleDenom);
+
 bool exportScenePdf(const QString &path, const SceneDocument &document, const Catalog &catalog,
                     const QImage *aerial, const SceneSheet &sheet, QString *error = 0);
 bool exportFormPdf(const QString &path, const FormLayout &layout, const QString &formId,

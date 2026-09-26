@@ -49,7 +49,11 @@ class SceneDocument : public QObject {
     Q_PROPERTY(QString selectionId READ selectionId NOTIFY selectionChanged)
     Q_PROPERTY(double gridMetres READ gridMetres WRITE setGridMetres NOTIFY viewChanged)
     Q_PROPERTY(bool snapEnabled READ snapEnabled WRITE setSnapEnabled NOTIFY viewChanged)
+    Q_PROPERTY(bool gridVisible READ gridVisible WRITE setGridVisible NOTIFY viewChanged)
     Q_PROPERTY(double zoom READ zoom WRITE setZoom NOTIFY viewChanged)
+    Q_PROPERTY(double pixelsPerMeter READ pixelsPerMeter NOTIFY viewChanged)
+    Q_PROPERTY(double paperWidthM READ paperWidthM WRITE setPaperWidthM NOTIFY viewChanged)
+    Q_PROPERTY(double paperHeightM READ paperHeightM WRITE setPaperHeightM NOTIFY viewChanged)
     Q_PROPERTY(double panX READ panX WRITE setPanX NOTIFY viewChanged)
     Q_PROPERTY(double panY READ panY WRITE setPanY NOTIFY viewChanged)
 public:
@@ -112,8 +116,17 @@ public:
     void setGridMetres(double metres);
     bool snapEnabled() const;
     void setSnapEnabled(bool on);
+    bool gridVisible() const;
+    void setGridVisible(bool on);
+    // zoom 是相对 20 像素/米的倍率：1 表示 100%。
     double zoom() const;
     void setZoom(double z);
+    double pixelsPerMeter() const;
+    double paperWidthM() const;
+    void setPaperWidthM(double metres);
+    double paperHeightM() const;
+    void setPaperHeightM(double metres);
+    QRectF paperWorldRect() const;
     double panX() const;
     void setPanX(double v);
     double panY() const;
@@ -121,6 +134,7 @@ public:
     bool dragGroups() const;
     void setDragGroups(bool on);
     void fitView(double viewWidth, double viewHeight, const Catalog *catalog);
+    void clampPan(double viewWidth, double viewHeight);
 
     AerialLayer aerial() const;
     void setAerial(const AerialLayer &layer);
@@ -156,7 +170,10 @@ private:
     QVector<Command *> m_redo;
     double m_grid;
     bool m_snap;
+    bool m_gridVisible;
     double m_zoom;
+    double m_paperWidthM;
+    double m_paperHeightM;
     double m_panX;
     double m_panY;
     bool m_dragGroups;
@@ -166,6 +183,10 @@ private:
     QStringList m_dragIds;
     AerialLayer m_aerial;
 };
+
+// 标尺刻度：在期望的像素间距上取 1、2、5、10 乘以 10 的幂。
+double niceMeterStep(double pixelsPerMeter, double desiredPixels);
+inline double basePixelsPerMeter() { return 20.0; }
 
 } // namespace sr
 

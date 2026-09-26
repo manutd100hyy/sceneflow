@@ -32,6 +32,10 @@ class AppController : public QObject {
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY updated)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY updated)
     Q_PROPERTY(QString zoomText READ zoomText NOTIFY updated)
+    Q_PROPERTY(double paperWidthM READ paperWidthM WRITE setPaperWidthM NOTIFY updated)
+    Q_PROPERTY(double paperHeightM READ paperHeightM WRITE setPaperHeightM NOTIFY updated)
+    Q_PROPERTY(bool gridVisible READ gridVisible WRITE setGridVisible NOTIFY updated)
+    Q_PROPERTY(int objectCount READ objectCount NOTIFY updated)
     Q_PROPERTY(QString hint READ hint NOTIFY updated)
     Q_PROPERTY(QVariantMap selection READ selection NOTIFY selectionChanged)
     Q_PROPERTY(QVariantList objects READ objects NOTIFY updated)
@@ -72,6 +76,13 @@ public:
     bool canUndo() const;
     bool canRedo() const;
     QString zoomText() const;
+    double paperWidthM() const;
+    void setPaperWidthM(double metres);
+    double paperHeightM() const;
+    void setPaperHeightM(double metres);
+    bool gridVisible() const;
+    void setGridVisible(bool on);
+    int objectCount() const;
     QString hint() const;
     QVariantMap selection() const;
     QVariantList objects() const;
@@ -140,6 +151,9 @@ public:
     Q_INVOKABLE QString proportionalize();
     Q_INVOKABLE QString scaleToMeasures();
     Q_INVOKABLE void fit();
+    Q_INVOKABLE void zoomIn();
+    Q_INVOKABLE void zoomOut();
+    Q_INVOKABLE void setDimensionStyle(int style);
     Q_INVOKABLE int rebuildIndex();
     Q_INVOKABLE void addTextAt(double x, double y, const QString &text);
     Q_INVOKABLE void setOpacity(double opacity);
@@ -153,6 +167,8 @@ signals:
     void textRequested(double x, double y);
     void symbolLibraryRequested();
     void symbolLibraryClosed();
+    void createDialogRequested();
+    void dismissPopups();
 
 private:
     void enterScreen(const QString &name);
